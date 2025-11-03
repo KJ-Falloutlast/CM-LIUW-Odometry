@@ -33,7 +33,7 @@
 </div>
 
 <p align="center">
-  <img src="./doc/Fig10-现场实验建图效果对比.jpg" width="90%">
+  <img src="./doc/Fig10-现场实验建图效果对比.jpg" width="100%">
   <br><em>The mapping details of CM-LIUW-Odometry and other algorithms.</em>
 </p>
 
