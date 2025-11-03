@@ -22,7 +22,7 @@
 
 [![GitHub Stars](https://img.shields.io/github/stars/KJ-Falloutlast/CM-LIUW-Odometry)](https://github.com/KJ-Falloutlast/CM-LIUW-Odometry/stargazers) 
 [![GitHub Forks](https://img.shields.io/github/forks/KJ-Falloutlast/CM-LIUW-Odometry)](https://github.com/KJ-Falloutlast/CM-LIUW-Odometry/fork)
-[![GitHub Issues](https://img.shields.io/github/forks/KJ-Falloutlast/CM-LIUW-Odometry)](https://github.com/KJ-Falloutlast/CM-LIUW-Odometry/issues)
+[![GitHub Issues](https://img.shields.io/github/issues/KJ-Falloutlast/CM-LIUW-Odometry)](https://github.com/KJ-Falloutlast/CM-LIUW-Odometry/issues)
 
 <a ><img alt="PRs-Welcome" src="https://img.shields.io/badge/PRs-Welcome-red" /></a>
 <a href="https://github.com/KJ-Falloutlast/CM-LIUW-Odometry/"><img src="https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black" /></a>
