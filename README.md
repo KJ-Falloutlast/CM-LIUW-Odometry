@@ -33,7 +33,7 @@
 </div>
 
 <p align="center">
-  <img src="./doc/Fig10-现场实验建图效果对比.jpg" width="80%">
+  <img src="./doc/Fig10-现场实验建图效果对比.jpg" width="90%">
   <br><em>The mapping details of CM-LIUW-Odometry and other algorithms.</em>
 </p>
 
@@ -42,7 +42,7 @@
 Simultaneous Localization and Mapping (SLAM) in large-scale, complex, and GPS-denied underground coal mine environments presents significant challenges. Sensors must contend with abnormal operating conditions: GPS unavailability impedes scene reconstruction and absolute geographic referencing, uneven or slippery terrain degrades wheel odometer accuracy, and long, feature-poor tunnels reduce LiDAR effectiveness. To address these issues, we propose CoalMine-LiDAR-IMU-UWB-Wheel-Odometry (**CM-LIUW-Odometry**), a multimodal SLAM framework based on the Iterated Error-State Kalman Filter (IESKF). First, LiDAR-inertial odometry is tightly fused with UWB absolute positioning constraints to align the SLAM system with a global coordinate. Next, wheel odometer is integrated through tight coupling, enhanced by nonholonomic constraints (NHC) and vehicle lever arm compensation, to address performance degradation in areas beyond UWB measurement range. Finally, an adaptive motion mode switching mechanism dynamically adjusts the robot’s motion mode based on UWB measurement range and environmental degradation levels. Experimental results validate that our method achieves superior accuracy and robustness in real-world underground coal mine scenarios, outperforming state-of-the-art approaches. We open source our code of this work on Github to benefit the robotics community.
 
 <p align="center">
-  <img src="./doc/system_overview.jpg" width="80%">
+  <img src="./doc/Fig2-system_overview.jpg" width="90%">
   <br><em>The system flow of CM-LIUW-Odometry.</em>
 </p>
 
