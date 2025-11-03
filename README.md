@@ -21,7 +21,7 @@
         <a href="http://arxiv.org/abs/"><img src='https://img.shields.io/badge/ArXiv-CM_LIUW_Odometry-red' alt='Paper PDF'></a>
 
 [![GitHub Stars](https://img.shields.io/github/stars/KJ-Falloutlast/CM-LIUW-Odometry)](https://github.com/KJ-Falloutlast/CM-LIUW-Odometry/stargazers) 
-[![GitHub Forks](https://img.shields.io/github/forks/chengwei0427/Adaptive-LIO)](https://github.com/KJ-Falloutlast/CM-LIUW-Odometry/fork)
+[![GitHub Forks](https://img.shields.io/github/forks/KJ-Falloutlast/CM-LIUW-Odometry)](https://github.com/KJ-Falloutlast/CM-LIUW-Odometry/fork)
 [![GitHub Issues](https://img.shields.io/github/forks/KJ-Falloutlast/CM-LIUW-Odometry)](https://github.com/KJ-Falloutlast/CM-LIUW-Odometry/issues)
 
 <a ><img alt="PRs-Welcome" src="https://img.shields.io/badge/PRs-Welcome-red" /></a>
