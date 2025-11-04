@@ -18,7 +18,7 @@
     <!-- <a href="https://hits.seeyoufarm.com">
         <img src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Fchengwei0427%2FAdaptive-LIO&count_bg=%2300B48B&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=Visitors&edge_flat=false"/></a> -->
         <!-- <a href="https://ieeexplore.ieee.org/document/10806842"><img src="https://img.shields.io/badge/Paper-IEEE JIOT2024-004088.svg"/></a> -->
-        <a href="http://arxiv.org/abs/"><img src='https://img.shields.io/badge/ArXiv-CM_LIUW_Odometry-red' alt='Paper PDF'></a>
+        <a href="https://arxiv.org/abs/2511.01379"><img src='https://img.shields.io/badge/ArXiv-CM_LIUW_Odometry-red' alt='Paper PDF'></a>
 
 [![GitHub Stars](https://img.shields.io/github/stars/KJ-Falloutlast/CM-LIUW-Odometry)](https://github.com/KJ-Falloutlast/CM-LIUW-Odometry/stargazers) 
 [![GitHub Forks](https://img.shields.io/github/forks/KJ-Falloutlast/CM-LIUW-Odometry)](https://github.com/KJ-Falloutlast/CM-LIUW-Odometry/fork)
