@@ -51,6 +51,9 @@ Simultaneous Localization and Mapping (SLAM) in large-scale, complex, and GPS-de
 - \[2025.06.16\] - **CM-LIUW-Odometry** is accepted to IROS 2025. :rocket:
 <!-- - \[2025.03\] -   Source code released  **🎉** -->
 
+- \[2025.11.04\] - Released an updated version of the [**CM-LIUW-Odometry**'](https://arxiv.org/abs/2511.01379) paper. :rocket:
+
+
 
 ## 📁 Dataset
 <!-- 
