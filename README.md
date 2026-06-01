@@ -46,6 +46,16 @@ Simultaneous Localization and Mapping (SLAM) in large-scale, complex, and GPS-de
   <br><em>The system flow of CM-LIUW-Odometry.</em>
 </p>
 
+## 🎥 Video
+
+<p align="center">
+  <a href="https://www.bilibili.com/video/BV1ThVZ6LESW/?vd_source=5c424a291ee45d557316e22fd7960e7f">
+    <img src="./doc/Fig10-现场实验建图效果对比.jpg" width="80%" alt="CM-LIUW-Odometry Video">
+  </a>
+  <br><em>Click the image above to watch the CM-LIUW-Odometry demonstration (IROS 2025).</em>
+</p>
+
+
 ## :memo: Updates
 
 - \[2025.06.16\] - **CM-LIUW-Odometry** is accepted to IROS 2025. :rocket:
