@@ -218,6 +218,7 @@ CM-LIUW-Odometry/
 If this work helps your research, please cite the IROS paper and consider giving the repository a star.
 
 ```bibtex
+{% raw %}
 @inproceedings{hu2025cmliuw,
   author    = {Kun Hu and Menggang Li and Zhiwen Jin and Chaoquan Tang and Eryi Hu and Gongbo Zhou},
   title     = {{CM-LIUW-Odometry}: Robust and High-Precision {LiDAR}-Inertial-{UWB}-Wheel Odometry for Extreme Degradation Coal Mine Tunnels},
@@ -226,6 +227,7 @@ If this work helps your research, please cite the IROS paper and consider giving
   pages     = {7139--7146},
   doi       = {10.1109/IROS60139.2025.11245914}
 }
+{% endraw %}
 ```
 
 ## Acknowledgments
