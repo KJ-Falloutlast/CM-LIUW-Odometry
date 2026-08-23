@@ -1,0 +1,113 @@
+common:
+    lid_topic_left:  "/ns2/velodyne_points"
+    lid_topic_right:  "/ns1/velodyne_points"
+    lid_topic: "/livox/lidar"
+    imu_topic:  "/livox/imu"
+    wheel_topic: "/odom_skid"  #odom odom_skid
+    gnss_topic:  "/gps/fix"
+    uwb_topic: "/time_domain/NDB"
+    use_wheel: false
+    use_gnss: false
+    use_uwb: false
+    time_sync_en: false         # ONLY turn on when external time synchronization is really not possible
+    time_offset_lidar_to_imu: 0.0
+
+preprocess:
+    lidar_type: 1                # 1 for Livox serials LiDAR, 2 for Velodyne LiDAR, 3 for ouster LiDAR,
+    scan_line: 6
+    blind: 4
+
+wheel:
+    wheel_cov: 0.01
+    nhc_y_cov: 0.01
+    nhc_z_cov: 0.001
+    extrinsic_est_wheel: false
+    scale_est_wheel: false
+    extrinsic_T: [ 0.15377, 0.02065, -0.24913]
+    extrinsic_R: [ 1, 0, 0,
+                   0, 1, 0,
+                   0, 0, 1]
+    wheel_scale: [1.0]
+
+mapping:
+    laser_point_cov: 0.1 #!!!!laser_point_cov对精度影响至关重要，cov增加，状态X和协方差P增大，lidar精度降低，其他传感器精度提高；cov减少，状态X和协方差P减少，lidar精度增加，其他传感器精度降低(原始状态为0.001)
+    acc_cov: 0.1
+    gyr_cov: 0.1
+    b_acc_cov: 0.0001
+    b_gyr_cov: 0.0001
+    fov_degree:    90
+    det_range:     450.0
+    extrinsic_est_en:  false      # true: enable the online estimation of IMU-LiDAR extrinsic
+    extrinsic_T: [ 0.04165, 0.02326, -0.0284 ] #livox: [ 0.04165, 0.02326, -0.0284 ]
+    extrinsic_R: [ 1, 0, 0,
+                   0, 1, 0,
+                   0, 0, 1]
+    right_lidar_to_imu: [ -0.514521, 0.701075, -0.493723,   -0.263596,
+                          -0.492472, -0.712956, -0.499164,   -0.373928,
+                          -0.701954, -0.0136853, 0.712091,     0.24377,
+                          0,           0,           0,           1 ]
+
+    left_lidar_to_imu: [ -0.516377, -0.702254, -0.490096, -0.264623,
+                         0.491997, -0.711704, 0.501414,  0.431973,
+                         -0.700923, 0.0177927, 0.713015,  0.24043,
+                         0,         0,         0,         1 ]
+
+    extrinT_Gnss2IMU: [ -0.25, 0, 0.0 ]
+    extrinR_Gnss2IMU: [ 1, 0, 0,
+                          0, 1, 0,
+                          0, 0, 1 ]
+uwb:
+    # if < 20, fps is not used in uwb.
+    slam_fps: 50
+    td: 0.03
+    is_initialize_with_ceres: true
+    is_pub_position_covariance: true
+    is_runtime_output: true
+    # parameters for UWB localization
+    # UWB setting ====================================
+    # Mobile, if /uav_id is set, will follow the /uav_id
+    mobile_id: 200
+    extrinsic_T: [ -0.06899, -0.12935, 0.0802 ] #uwb2imu
+
+    # Anchor
+    # 6节点
+    # anchor_list: [100, 101, 102, 103, 104, 105]
+    # anchor_100: [0, 0, 0]
+    # anchor_101: [14.6339, 0.00044865, -0.000732158]
+    # anchor_102: [14.7428, 25.4994, -0.0135969]
+    # anchor_103: [-0.020438, -1.00138, 5.29275]
+    # anchor_104: [-0.0852587, 26.5864, 5.25772]
+    # anchor_105: [17.3644, 10.056, 5.24208]
+
+    # 200m巷道：4节点
+    anchor_list: [100, 101, 102, 103]
+    anchor_100: [-5, 3, 7]
+    anchor_101: [30, 3, 0]
+    anchor_102: [0, -3, 0]
+    anchor_103: [25, -3, 7]
+
+    # 200m巷道：2节点
+    # anchor_list: [100, 101]
+    # anchor_100: [-5, 3, 7]
+    # anchor_101: [25, -3, 7]
+
+
+    gyro_noise: 0.01
+    acc_noise: 0.48
+    gyro_bias_noise: 0.0000001
+    acc_bias_noise: 0.02
+    uwb_noise: 0.1
+    trajectory_noise: 0.2
+    non_hol_noise_z: 0.05
+    N_distance: 3 #max times of uwb areas
+
+publish:
+    path_en:  true
+    scan_publish_en:  true       # false: close all the point cloud output
+    dense_publish_en: true       # false: low down the points number in a global-frame point clouds scan.
+    scan_bodyframe_pub_en: true  # true: output the point cloud scans in IMU-body-frame
+
+pcd_save:
+    pcd_save_en: true
+    interval: -1                 # how many LiDAR frames saved in each pcd file;
+                                 # -1 : all frames will be saved in ONE pcd file, may lead to memory crash when having too much frames.

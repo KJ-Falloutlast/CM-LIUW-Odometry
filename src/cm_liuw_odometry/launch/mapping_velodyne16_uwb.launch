@@ -1,0 +1,105 @@
+<launch>
+	<!-- <param name="use_sim_time" value="true"/> -->
+    <arg name="rviz" default="true" />
+
+    <param name="feature_extract_enable" type="bool" value="0"/>
+    <param name="point_filter_num" type="int" value="4"/>
+	<!-- origin:
+		max_iteration = 2
+		filter_size_surf = 0.5
+		filter_size_surf = 0.2
+	-->
+    <param name="max_iteration" type="int" value="5" />
+    <param name="filter_size_surf" type="double" value="0.1" />
+    <param name="filter_size_map" type="double" value="0.1" />
+    <param name="cube_side_length" type="double" value="1000" />
+    <param name="runtime_pos_log_enable" type="bool" value="0" />
+
+    <rosparam command="load" file="$(find cm_liuw_odometry)/config/velodyne16_uwb.yaml" />
+
+
+
+	<!-- ####加入paloc sysytem#### -->
+	<param name="config_directory" type="string" value="$(find cm_liuw_odometry)/config/"/>
+    <param name="save_directory" type="string" value="$(find cm_liuw_odometry)/data/paloc_result/"/>
+    <param name="prior_map_directory" type="string" value="$(find cm_liuw_odometry)/data/prior_map/paloc_map_file/"/>
+    <param name="pcd_save/pcd_save_dir" type="string" value="$(find cm_liuw_odometry)/PCD/"/>
+
+    <arg name="sequence" default="20220216_corridor_day_ref"/>
+
+    <rosparam param="common/sequence" subst_value="true">$(arg sequence)</rosparam>
+
+
+
+    <node pkg="cm_liuw_odometry" type="cm_liuw_slam" name="laserMapping_msf_ori" output="screen">
+	</node>
+
+    <node pkg="cm_liuw_odometry" type="pgo_localization_ori" name="pgo_localization_ori" output="screen" required="true"/>
+	<!-- ####加入paloc sysytem#### -->
+	<!-- <node pkg="cm_liuw_odometry" type="fastlio_msf_mapping" name="laserMapping" output="screen" launch-prefix="gdb -ex run -args"/> -->
+
+	<node name="rviz_fastlio_multi_ori" pkg="rviz" type="rviz" args="-d $(find cm_liuw_odometry)/rviz_cfg/fastlio_multi_ori.rviz" />
+
+	<node pkg="tf" type="static_transform_publisher" name="base_link_laser_msf_ori_broadcaster" args="0 0 0 0 0 0 base_link laser 10" />
+	<node pkg="tf" type="static_transform_publisher" name="world_map_msf_ori_broadcaster" args="0 0 0 0 0 0 world map 10" />
+
+
+	<!-- uwb_init: 6节点 -->
+	<!-- <node pkg="tf" type="static_transform_publisher" name="world_2_anchor100"
+		args="0.0 0.0 0.0 0.0 0.0 0.0 /camera_init /anchor_100 100" />
+	<node pkg="tf" type="static_transform_publisher" name="world_2_anchor101"
+		args="14.6339 0.00044865 -0.000732158 0.0 0.0 0.0 /camera_init /anchor_101 100" />
+	<node pkg="tf" type="static_transform_publisher" name="world_2_anchor102"
+		args="14.7428 25.4994 -0.0135969 0.0 0.0 0.0 /camera_init /anchor_102 100" />
+	<node pkg="tf" type="static_transform_publisher" name="world_2_anchor103"
+		args="-0.020438 -1.00138 5.29275 0.0 0.0 0.0 /camera_init /anchor_103 100" />
+	<node pkg="tf" type="static_transform_publisher" name="world_2_anchor104"
+		args="-0.0852587 26.5864 5.25772 0.0 0.0 0.0 /camera_init /anchor_104 100" />
+	<node pkg="tf" type="static_transform_publisher" name="world_2_anchor105"
+		args="17.3644 10.056 5.24208 0.0 0.0 0.0 /camera_init /anchor_105 100" /> -->
+
+	<!-- 200m coalmine: 4 nodes -->
+	<!-- <node pkg="tf" type="static_transform_publisher" name="msf_ori_world_2_anchor100"
+		args="-5 3 7 0.0 0.0 0.0 /camera_init /anchor_100 100" />
+	<node pkg="tf" type="static_transform_publisher" name="msf_ori_world_2_anchor101"
+		args="30 3 0 0.0 0.0 0.0 /camera_init /anchor_101 100" />
+	<node pkg="tf" type="static_transform_publisher" name="msf_ori_world_2_anchor102"
+		args="0 -3 0 0.0 0.0 0.0 /camera_init /anchor_102 100" />
+	<node pkg="tf" type="static_transform_publisher" name="msf_ori_world_2_anchor103"
+		args="25 -3 7 0.0 0.0 0.0 /camera_init /anchor_103 100" /> -->
+
+	<!-- 200m coalmine: 2 nodes -->
+	<!-- <node pkg="tf" type="static_transform_publisher" name="world_2_anchor100"
+		args="-5 3 7 0.0 0.0 0.0 /camera_init /anchor_100 100" />
+	<node pkg="tf" type="static_transform_publisher" name="world_2_anchor101"
+		args="25 -3 7 0.0 0.0 0.0 /camera_init /anchor_101 100" /> -->
+
+
+	<!-- 506 20241026实验-->
+	<!-- <node pkg="tf" type="static_transform_publisher" name="world_2_anchor100"
+		args="7.302 0.832 2.026 0.0 0.0 0.0 /camera_init /anchor_100 100" />
+
+	<node pkg="tf" type="static_transform_publisher" name="world_2_anchor101"
+		args="40.657 0.681 1.651 0.0 0.0 0.0 /camera_init /anchor_101 100" />
+
+	<node pkg="tf" type="static_transform_publisher" name="world_2_anchor102"
+		args="7.352 -0.766 1.691 0.0 0.0 0.0 /camera_init /anchor_102 100" />
+
+	<node pkg="tf" type="static_transform_publisher" name="world_2_anchor103"
+		args="49.631 -0.669 1.989 0.0 0.0 0.0 /camera_init /anchor_103 100" /> -->
+
+
+	<!-- 506 20241028实验 -->
+	<node pkg="tf" type="static_transform_publisher" name="msf_ori_world_2_anchor100"
+		args="3.796 -0.901 2.509 0.0 0.0 0.0 /world /anchor_100 100" />
+
+	<node pkg="tf" type="static_transform_publisher" name="msf_ori_world_2_anchor101"
+		args="7.319 -0.904 0.121 0.0 0.0 0.0 /world /anchor_101 100" />
+
+	<node pkg="tf" type="static_transform_publisher" name="msf_ori_world_2_anchor102"
+		args="7.303 0.889 0.113 0.0 0.0 0.0 /world /anchor_102 100" />
+
+	<node pkg="tf" type="static_transform_publisher" name="msf_ori_world_2_anchor103"
+		args="3.687 0.899 0.114 0.0 0.0 0.0 /world /anchor_103 100" />
+
+</launch>

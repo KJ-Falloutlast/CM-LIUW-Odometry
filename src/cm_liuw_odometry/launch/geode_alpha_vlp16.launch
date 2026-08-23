@@ -1,0 +1,34 @@
+<launch>
+    <!-- set your data config -->
+    <!-- <param name="/use_sim_time" value="false"/> -->
+    <!-- All directory parameters must end with '/'. -->
+    <param name="config_directory" type="string" value="$(find cm_liuw_odometry)/config/"/>
+    <param name="save_directory" type="string" value="$(find cm_liuw_odometry)/data/paloc_result/"/>
+    <param name="prior_map_directory" type="string" value="$(find cm_liuw_odometry)/data/prior_map/paloc_map_file/"/>
+    <param name="pcd_save/pcd_save_dir" type="string" value="$(find cm_liuw_odometry)/PCD/"/>
+
+    <!--The name of your prior map file must be the same with sequence name, e.g. stairs_bob.pcd -->
+    <arg name="sequence" default="1005_01_img10hz600p"/>
+
+    <!-- set your mapping params-->
+    <rosparam file="$(find cm_liuw_odometry)/config/geode_alpha_vlp16.yaml" command="load"/>
+    <rosparam param="common/sequence" subst_value="true">$(arg sequence)</rosparam>
+
+    <!--LIO-->
+    <node pkg="cm_liuw_odometry" type="cm_liuw_slam" name="laserMapping_msf_ori" output="screen" required="true"/>
+
+    <!--PGO-->
+    <!-- <node pkg="cm_liuw_odometry" type="pgo_localization_ori" name="pgo_localization_ori" output="screen" required="true"/> -->
+
+    <!-- <node launch-prefix="nice" pkg="rviz" type="rviz" name="rviz_pgo" -->
+    <!-- args="-d $(find cm_liuw_odometry)/rviz_cfg/ouster_indoors.rviz"/> -->
+
+	<node name="rviz_fastlio_multi_ori" pkg="rviz" type="rviz" args="-d $(find cm_liuw_odometry)/rviz_cfg/ouster_indoors.rviz" />
+<!--
+	<node pkg="tf" type="static_transform_publisher" name="base_link_laser_msf_ori_broadcaster" args="0 0 0 0 0 0 base_link laser 10" />
+	<node pkg="tf" type="static_transform_publisher" name="world_map_msf_ori_broadcaster" args="0 0 0 0 0 0 world map 10" /> -->
+
+    <!--set your data bag path-->
+    <!-- Play a rosbag from a separate terminal. -->
+
+</launch>

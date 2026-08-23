@@ -1,0 +1,188 @@
+common:
+    lid_topic_left:  "/ns2/velodyne_points"
+    lid_topic_right:  "/ns1/velodyne_points"
+    lid_topic: "/livox/lidar" #/velodyne_points /livox/lidar
+    imu_topic: "/livox/imu" #/livox/imu /imu/data
+    wheel_topic: "/odom_skid"  #odom odom_skid
+    gnss_topic: "/gps/fix"
+    uwb_topic: /uwbx/NDB #"/uwbx/NDB" #"/uwbx/NDB_faster" #"/time_domain/NDB" #/uwbx/NDB_faster
+    cloud_registered_topic: "/cloud_registered_body_ori"
+    odom_topic: "/Odometry_ori"
+    use_wheel: false
+    use_gnss: false
+    use_uwb: false
+    time_sync_en: false         # ONLY turn on when external time synchronization is really not possible
+
+    # new added by paloc #
+    odom_link: "camera_init"
+    scan_filter_size: 0.1
+    map_viewer_size: 0.2
+    map_saved_size: 0.1
+
+    useImuFrame: false                        # when we use imu frame, we will get dense color cloud
+    useLoopClosure: true                      # if we enable loop closure
+
+    # save data
+    saveResultBag: false
+    saveResultBodyFrame: true
+    saveKeyFrame: false                     # include color point cloud frame and raw distorted point cloud
+
+    #parkland0
+    #  initial_pose: [ 0.590137, -0.806766, 0.029430 ,6.874957,
+    #                  0.807092 ,0.590424 ,0.001337 ,-55.680973,
+    #                  -0.018454, 0.022964 ,0.999566 ,0.990686,
+    #                  0.000000 ,0.000000, 0.000000 ,1.000000 ]
+
+    # math-institute
+    # initial_pose: [ -0.370474, -0.928788 ,-0.010043, -23.358046,
+    #                 0.928795, -0.370324 ,-0.014133, -33.184776,
+    #                 0.009408, -0.014564 ,0.999850 ,1.068895,
+    #                 0.000000, 0.000000, 0.000000 ,1.000000 ]
+    initial_pose: [1, 0, 0, 0,
+                   0, 1, 0, 0,
+                   0, 0, 1, 0,
+                   0, 0, 0, 0]
+    # new added by paloc #
+
+preprocess:
+    lidar_type: 1                # 1 for Livox serials LiDAR, 2 for Velodyne LiDAR, 3 for ouster LiDAR,
+    scan_line: 6                 # 6 for avia, 4 for mid360, 16 for velodyne
+    scan_rate: 10                # only need to be set for velodyne, unit: Hz,
+    blind: 4                     # 4 for avia; 1 for velodyne 16, 0.5 for mid360
+    # new added in paloc
+    timestamp_unit: 3            # the unit of time/t field in the PointCloud2 rostopic: 0-second, 1-milisecond, 2-microsecond, 3-nanosecond.
+
+
+wheel:
+    wheel_cov: 0.01
+    nhc_y_cov: 0.01
+    nhc_z_cov: 0.001
+    extrinsic_est_wheel: false
+    scale_est_wheel: false
+    extrinsic_T: [ 0.15377, 0.02065, -0.24913]
+    extrinsic_R: [ 1, 0, 0,
+                   0, 1, 0,
+                   0, 0, 1]
+    wheel_scale: [1.0]
+
+mapping:
+    # 当laser_point_cov为0.1，可以保证在LIO不失效的情况下运行LIU跑200m巷道跑130m
+    laser_point_cov: 0.1 #!!!!laser_point_cov对精度影响至关重要，cov增加，状态X和协方差P增大，lidar精度降低，其他传感器精度提高；cov减少，状态X和协方差P减少，lidar精度增加，其他传感器精度降低(0.1 is the most suitable value with covariance ouput available, please note that!) # in pointlio (avia = 0.001, velodyne 16 = 0.1, ouster64 = 0.1)
+    acc_cov: 0.1 # 0.04
+    gyr_cov: 0.1 #  0.004
+    b_acc_cov: 0.0001 #0.002
+    b_gyr_cov: 0.0001 #4.0e-5
+    fov_degree: 90 # for mid360 360, for velodyne 180
+    det_range: 100.0
+    extrinsic_est_en:  false      # true: enable the online estimation of IMU-LiDAR extrinsic
+    extrinsic_T: [ 0.0, 0.0, 0.0 ] # for avia
+    # extrinsic_T: [ 0.25952, 0.02065, 0.4702] # for husky
+    # extrinsic_T: [ -0.011, -0.02329, 0.04412 ] # for mid360
+    extrinsic_R: [ 1, 0, 0,
+                0, 1, 0,
+                0, 0, 1]
+    right_lidar_to_imu: [ -0.514521, 0.701075, -0.493723,   -0.263596,
+                          -0.492472, -0.712956, -0.499164,   -0.373928,
+                          -0.701954, -0.0136853, 0.712091,     0.24377,
+                          0,           0,           0,           1 ]
+
+    left_lidar_to_imu: [ -0.516377, -0.702254, -0.490096, -0.264623,
+                         0.491997, -0.711704, 0.501414,  0.431973,
+                         -0.700923, 0.0177927, 0.713015,  0.24043,
+                         0,         0,         0,         1 ]
+
+    # gnss to imu
+    extrinT_Gnss2IMU: [ -0.25, 0, 0.0 ]
+    extrinR_Gnss2IMU: [ 1, 0, 0,
+                          0, 1, 0,
+                          0, 0, 1 ]
+
+uwb:
+    # if < 20, fps is not used in uwb.
+    slam_fps: 50
+    td: 0.03
+    is_initialize_with_ceres: true
+    is_pub_position_covariance: true
+    is_runtime_output: true
+    # parameters for UWB localization
+    # UWB setting ====================================
+    # Mobile, if /uav_id is set, will follow the /uav_id
+    mobile_id: 104 #104 # 200 for husky
+    # extrinsic_T: [ -0.06899, -0.12935, 0.0802 ] #for husky
+    # extrinsic_T: [ -0.06899, -0.12935, 0.0802 ] #uwb2imu
+    extrinsic_T: [0.0545, -0.0774, 0.0713] #to mid360 IMU
+    # extrinsic_T: [0.0955, -0.0946, 0.0666] #to xsens imu
+
+    # Anchor
+    # 6节点
+    # anchor_list: [100, 101, 102, 103, 104, 105]
+    # anchor_100: [0, 0, 0]
+    # anchor_101: [14.6339, 0.00044865, -0.000732158]
+    # anchor_102: [14.7428, 25.4994, -0.0135969]
+    # anchor_103: [-0.020438, -1.00138, 5.29275]
+    # anchor_104: [-0.0852587, 26.5864, 5.25772]
+    # anchor_105: [17.3644, 10.056, 5.24208]
+
+    # 200m巷道：4节点
+    # anchor_list: [100, 101, 102, 103]
+    # anchor_100: [-5, 3, 7]
+    # anchor_101: [30, 3, 0]
+    # anchor_102: [0, -3, 0]
+    # anchor_103: [25, -3, 7]
+
+    # 506 exp 20241026实验
+    # anchor_list: [100, 101, 102, 103]
+    # anchor_100: [7.302, 0.832, 2.026]
+    # anchor_101: [40.657, 0.681, 1.651]
+    # anchor_102: [7.352, -0.766, 1.691]
+    # anchor_103: [40.631, -0.669, 1.989]
+
+    # 200m巷道：2节点
+    # anchor_list: [100, 101]
+    # anchor_100: [-5, 3, 7]
+    # anchor_101: [25, -3, 7]
+
+    # 506 20241028实验：标定四节点设置
+    anchor_list: [100, 101, 102, 103]
+    anchor_100: [3.796, -0.901, 2.509]
+    anchor_101: [7.319, -0.904, 0.121]
+    anchor_102: [7.303, 0.889, 0.113]
+    anchor_103: [3.687, 0.899, 0.114]
+
+    uwb_noise: 0.1 # 0.1是最好的情况，不要改变这个值
+    trajectory_noise: 0.2
+    non_hol_noise_z: 0.05
+    N_distance: 4 #max times of uwb areas
+
+pgo:
+  SKIP_FRAMES: 5                                    # map visualization, every x frame we add it in the globalmap
+  useRawCloud: false
+  showDegenercy: true
+
+  useGlobalPrior: false                              # if not prior map, we set false
+  icpO3dType: 2                                    # 0: icp 1:point2plane 2:gicp
+  degeneracy_thres: 50
+  correspondence_dis: 2.0                          # stair_bob: 0.6;
+  map_radius: 40
+  map_filter_size: 0.1                             # indoor:0.1, outdoor:0.2
+
+  loopZOffset: 1.0                                 # > 1.0m, do not detect loop
+  historyKeyframeSearchRadius: 10.0
+  historyKeyframeSearchTimeDiff: 40.0
+  historyKeyframeSearchNum: 20
+  loopFitnessScoreThreshold: 0.3
+  loopClosureFrequency: 1                         # if you want to detect more loop, you can set it larger
+  filterDis: 0.5                                  #  did not add loop if the distance of consecutive node less than 10m
+  filterNodeNum: 10                               #  did not detect loop every 10 nodes for ecah loop detetcion method
+
+
+publish:
+    path_en:  true
+    scan_publish_en:  true       # false: close all the point cloud output
+    dense_publish_en: true       # false: low down the points number in a global-frame point clouds scan.
+    scan_bodyframe_pub_en: true  # true: output the point cloud scans in IMU-body-frame
+
+pcd_save:
+    pcd_save_en: true
+    interval: 3000                 # how many LiDAR frames saved in each pcd file;
+                                 # -1 : all frames will be saved in ONE pcd file, may lead to memory crash when having too much frames.

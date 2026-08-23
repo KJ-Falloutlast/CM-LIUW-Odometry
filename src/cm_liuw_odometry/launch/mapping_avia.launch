@@ -1,0 +1,28 @@
+<launch>
+<!-- Launch file for Livox AVIA LiDAR -->
+
+	<arg name="rviz" default="true" />
+
+	<rosparam command="load" file="$(find cm_liuw_odometry)/config/avia.yaml" />
+
+	<param name="feature_extract_enable" type="bool" value="0"/>
+	<param name="point_filter_num" type="int" value="3"/>
+	<param name="max_iteration" type="int" value="5" />
+	<!-- <param name="filter_size_surf" type="double" value="0.5" /> -->
+	<!-- <param name="filter_size_map" type="double" value="0.5" /> -->
+	<!--note:
+		 filter_size_surf 和 filter_size_map越小地图越精细，但是耗时越长
+		 max_iteration越大精度越高，耗时越长
+		  max_iteration增大所带来的时间开销要大于filter_size_surf所减少的时间开销
+	 -->
+	<param name="filter_size_surf" type="double" value="0.2" />
+	<param name="filter_size_map" type="double" value="0.2" />
+	<param name="cube_side_length" type="double" value="1000" />
+	<param name="runtime_pos_log_enable" type="bool" value="0" />
+    <node pkg="cm_liuw_odometry" type="cm_liuw_slam" name="laserMapping" output="screen" />
+
+	<group if="$(arg rviz)">
+	<node launch-prefix="nice" pkg="rviz" type="rviz" name="rviz_ori" args="-d $(find cm_liuw_odometry)/rviz_cfg/fastlio_multi_ori.rviz" />
+	</group>
+
+</launch>

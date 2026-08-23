@@ -1,0 +1,32 @@
+cff-version: 1.2.0
+message: "If you use CM-LIUW-Odometry in your research, please cite our IROS 2025 paper."
+title: "CM-LIUW-Odometry"
+type: software
+version: 1.0.0
+date-released: 2026-08-23
+url: "https://github.com/KJ-Falloutlast/CM-LIUW-Odometry"
+license: GPL-2.0-only
+authors:
+  - family-names: Hu
+    given-names: Kun
+preferred-citation:
+  type: conference-paper
+  title: "CM-LIUW-Odometry: Robust and High-Precision LiDAR-Inertial-UWB-Wheel Odometry for Extreme Degradation Coal Mine Tunnels"
+  authors:
+    - family-names: Hu
+      given-names: Kun
+    - family-names: Li
+      given-names: Menggang
+    - family-names: Jin
+      given-names: Zhiwen
+    - family-names: Tang
+      given-names: Chaoquan
+    - family-names: Hu
+      given-names: Eryi
+    - family-names: Zhou
+      given-names: Gongbo
+  collection-title: "2025 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)"
+  year: 2025
+  start: 7139
+  end: 7146
+  doi: "10.1109/IROS60139.2025.11245914"

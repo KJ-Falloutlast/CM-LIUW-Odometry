@@ -1,0 +1,221 @@
+common:
+  lid_topic: "/livox/lidar"
+  imu_topic: "/livox/imu"
+  wheel_topic: "/husky_velocity_controller/odom"  #odom odom_skid
+  gnss_topic: "/gps/fix"
+  uwb_topic: "/uwbx/NDB" #"/uwbx/NDB" #"/uwbx/NDB_faster" #"/time_domain/NDB" #/uwbx/NDB_faster
+  cloud_registered_topic: "/cloud_registered_body_ori"
+  odom_topic: "/Odometry_ori"
+  use_wheel: false
+  use_gnss: false
+  use_uwb: false
+  time_sync_en: true         # ONLY turn on when external time synchronization is really not possible
+  ros_driver_fix_en: true #修复lidar和imu的时间戳
+  odom_link: "camera_init"
+  scan_filter_size: 0.1
+  map_viewer_size: 0.2
+  map_saved_size: 0.1
+
+  useImuFrame: false                        # when we use imu frame, we will get dense color cloud
+  useLoopClosure: true                      # if we enable loop clouser
+
+  # save data
+  saveResultBag: false
+  saveResultBodyFrame: true
+  saveKeyFrame: false                     # include color point cloud frame and raw distorted point cloud
+
+  # origin dataset
+  # initial_pose: [ -0.519301, 0.850557, 0.082936 ,-11.347226,
+  #                 -0.852164, -0.522691, 0.024698, 3.002144,
+  #                 0.064357, -0.057849, 0.996249, -0.715776,
+  #                 0.000000, 0.000000, 0.000000, 1.000000 ]
+
+  # botarnic garden dataset
+  initial_pose: [ 1, 0, 0, 0,
+                  0, 1, 0, 0,
+                  0, 0, 1, 0,
+                  0.000000, 0.000000, 0.000000, 1.000000 ]
+
+preprocess:
+  lidar_type: 1                          # 1 for Livox serials LiDAR, 2 for Velodyne LiDAR, 3 for ouster LiDAR,
+  scan_line: 6
+  scan_rate: 10                         # only need to be set for velodyne, unit: Hz,
+  timestamp_unit: 0                     # the unit of time/t field in the PointCloud2 rostopic: 0-second, 1-milisecond, 2-microsecond, 3-nanosecond.
+  blind: 4
+  timestamp_unit: 0            # the unit of time/t field in the PointCloud2 rostopic: 0-second, 1-milisecond, 2-microsecond, 3-nanosecond.
+
+# lio:
+#   lidar_type: 2                          # 1 for Livox serials LiDAR, 2 for Velodyne LiDAR, 3 for ouster LiDAR,
+#   scan_line: 16
+#   scan_rate: 10                         # only need to be set for velodyne, unit: Hz,
+#   timestamp_unit: 0                     # the unit of time/t field in the PointCloud2 rostopic: 0-second, 1-milisecond, 2-microsecond, 3-nanosecond.
+#   blind: 0.5                            # remove the nearest point cloud
+
+#   fov_degree: 180
+#   det_range: 150.0
+
+#   point_filter_num: 1
+#   max_iteration: 3
+#   filter_size_corner: 0.1
+#   filter_size_surf: 0.1
+#   filter_size_map: 0.2
+#   cube_side_length: 1000
+
+wheel:
+  wheel_cov: 0.01
+  nhc_y_cov: 0.01
+  nhc_z_cov: 0.001
+  extrinsic_est_wheel: false
+  scale_est_wheel: false
+  # extrinsic_T: [ 0.15377, 0.02065, -0.24913]
+  # extrinsic_T: [-0.11393, -0.02424, 0.83813] # for husky real robot (2025)
+  extrinsic_T: [-0.11394, 0.02343, -0.84013] # for husky wheel to avia imu (2026)
+  extrinsic_R: [ 1, 0, 0,
+                  0, 1, 0,
+                  0, 0, 1]
+  wheel_scale: [1.0]
+
+mapping:
+    # 当laser_point_cov为0.1，可以保证在LIO不失效的情况下运行LIU跑200m巷道跑130m
+  laser_point_cov: 0.0001 #!!!!laser_point_cov对精度影响至关重要，cov增加，状态X和协方差P增大，lidar精度降低，其他传感器精度提高；cov减少，状态X和协方差P减少，lidar精度增加，其他传感器精度降低(0.1 is the most suitable value with covariance ouput available, please note that!) # in pointlio (avia = 0.001, velodyne 16 = 0.1, ouster64 = 0.1)
+  # 原始的cov_acc, cov_gyr
+  # acc_cov: 0.1 # 0.04
+  # gyr_cov: 0.1 #  0.004
+
+  # FAST-LIVO2中cov_acc, cov_gyr
+  acc_cov: 0.5 # 0.2
+  gyr_cov: 0.3 # 0.5
+  b_acc_cov: 0.0001 #0.002
+  b_gyr_cov: 0.0001 #4.0e-5
+
+  # acc_cov: 1.0481546278947311e-02  # acc noise and bias
+  # b_acc_cov: 1.8451561389195461e-04
+  # gyr_cov: 9.6690835928856730e-03   # gyro noise and bias
+  # b_gyr_cov: 8.2887875865635737e-05
+
+  fov_degree: 90 # for mid360 360, for velodyne 180,  avia 90
+  det_range: 450.0
+  extrinsic_est_en:  false      # true: enable the online estimation of IMU-LiDAR extrinsic
+  # extrinsic_T: [ 0.0, 0.0, 0.0 ] # for avia
+  extrinsic_T: [0.04165, 0.02326, -0.0284] # for avia 2026
+  # # extrinsic_T: [ 0.25952, 0.02065, 0.4702] # for husky
+  # # extrinsic_T: [ -0.011, -0.02329, 0.04412 ] # for mid360
+  extrinsic_R: [ 1, 0, 0,
+              0, 1, 0,
+              0, 0, 1]
+
+
+  # botarnic garden dataset
+  # extrinsic_T: [0.0584867781527745, 0.00840419966766332,0.168915521980526]
+  # extrinsic_R: [ 0.999678872580465, 0.0252865664429322, 0.00150422292234868,
+  #                     -0.0252723438960774, 0.999649431893338, -0.0078025434141585,
+  #                     -0.00170103929405540, 0.00776298237926191, 0.99996789371916]
+
+  right_lidar_to_imu: [ -0.514521, 0.701075, -0.493723,   -0.263596,
+                        -0.492472, -0.712956, -0.499164,   -0.373928,
+                        -0.701954, -0.0136853, 0.712091,     0.24377,
+                        0,           0,           0,           1 ]
+
+  left_lidar_to_imu: [ -0.516377, -0.702254, -0.490096, -0.264623,
+                        0.491997, -0.711704, 0.501414,  0.431973,
+                        -0.700923, 0.0177927, 0.713015,  0.24043,
+                        0,         0,         0,         1 ]
+
+  # gnss to imu
+  extrinT_Gnss2IMU: [ -0.25, 0, 0.0 ]
+  extrinR_Gnss2IMU: [ 1, 0, 0,
+                        0, 1, 0,
+                        0, 0, 1 ]
+  pcd_save_dir: "xxxxx" #保存路径
+
+pcd_save:
+    pcd_save_en: true
+    interval: -1                 # how many LiDAR frames saved in each pcd file;
+                                 # -1 : all frames will be saved in ONE pcd file, may lead to memory crash when having too much frames.
+
+uwb:
+  # if < 20, fps is not used in uwb.
+  slam_fps: 50
+  td: 0.03
+  is_initialize_with_ceres: true
+  is_pub_position_covariance: true
+  is_runtime_output: true
+  is_pub_observation_vector: true
+  # parameters for UWB localization
+  # UWB setting ====================================
+  # Mobile, if /uav_id is set, will follow the /uav_id
+  mobile_id: 104 #104 # 200 for husky
+  # extrinsic_T: [ -0.06899, -0.12935, 0.0802 ] #for husky
+  # extrinsic_T: [ -0.06899, -0.12935, 0.0802 ] #uwb2imu
+  # extrinsic_T: [0.0545, -0.0774, 0.0713] #to mid360 IMU
+  # extrinsic_T: [0.0955, -0.0946, 0.0666] #to xsens imu
+  extrinsic_T: [0.05732, -0.04889, -0.05155] #to husky real robot
+
+  # Anchor
+  # 6节点
+  # anchor_list: [100, 101, 102, 103, 104, 105]
+  # anchor_100: [0, 0, 0]
+  # anchor_101: [14.6339, 0.00044865, -0.000732158]
+  # anchor_102: [14.7428, 25.4994, -0.0135969]
+  # anchor_103: [-0.020438, -1.00138, 5.29275]
+  # anchor_104: [-0.0852587, 26.5864, 5.25772]
+  # anchor_105: [17.3644, 10.056, 5.24208]
+
+  # 200m巷道：4节点
+  # anchor_list: [100, 101, 102, 103]
+  # anchor_100: [-5, 3, 7]
+  # anchor_101: [30, 3, 0]
+  # anchor_102: [0, -3, 0]
+  # anchor_103: [25, -3, 7]
+
+  # 506 exp 20241026实验
+  # anchor_list: [100, 101, 102, 103]
+  # anchor_100: [7.302, 0.832, 2.026]
+  # anchor_101: [40.657, 0.681, 1.651]
+  # anchor_102: [7.352, -0.766, 1.691]
+  # anchor_103: [40.631, -0.669, 1.989]
+
+  # 200m巷道：2节点
+  # anchor_list: [100, 101]
+  # anchor_100: [-5, 3, 7]
+  # anchor_101: [25, -3, 7]
+
+  # 506 20241028实验：标定四节点设置
+  # anchor_list: [100, 101, 102, 103]
+  # anchor_100: [3.796, -0.901, 2.509]
+  # anchor_101: [7.319, -0.904, 0.121]
+  # anchor_102: [7.303, 0.889, 0.113]
+  # anchor_103: [3.687, 0.899, 0.114]
+
+  # 20241226实验
+  anchor_list: [100, 101, 102, 103]
+  anchor_100: [2.844, 0.551, 0.063]
+  anchor_101: [2.819, 0.323, 2.511]
+  anchor_102: [14.949, 0.638, 0.005]
+  anchor_103: [3.006, -5.291, 0.051]
+
+  uwb_noise: 0.1 # 0.1是最好的情况，不要改变这个值
+  trajectory_noise: 0.2
+  non_hol_noise_z: 0.05
+  N_distance: 3 #max times of uwb areas
+
+pgo:
+  SKIP_FRAMES: 5                                    # map visualization, every x frame we add it in the globalmap and publish it
+  useRawCloud: true
+  showDegenercy: true                             # false: show uncertainty; true: show degeneracy
+
+  useGlobalPrior: false
+  icpO3dType: 2                                    # 0: icp 1:point2plane 2:gicp
+  degeneracy_thres: 50
+  correspondence_dis: 0.8                          # stair_bob: 0.6;
+  map_radius: 40
+  map_filter_size: 0.1                             # indoor:0.1, outdoor:0.2
+
+  loopZOffset: 2.0                                 # for stairs, if z_offset is larger than 2.0, we do not detect loop
+  historyKeyframeSearchRadius: 10.0
+  historyKeyframeSearchTimeDiff: 40.0
+  historyKeyframeSearchNum: 25
+  loopFitnessScoreThreshold: 0.3
+  loopClosureFrequency: 1                         # if you want to detect more loop, you can set it larger
+  filterDis: 0.5                                  #  did not add loop if the distance of consecutive node less than 10m
+  filterNodeNum: 10                               #  did not detect loop every 10 nodes for ecah loop detetcion method

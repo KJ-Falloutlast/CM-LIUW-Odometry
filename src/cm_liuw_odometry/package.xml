@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>cm_liuw_odometry</name>
+  <version>1.0.0</version>
+  <description>
+    CM-LIUW-Odometry: robust LiDAR-inertial-UWB-wheel odometry for
+    extreme-degradation coal mine tunnels (IROS 2025).
+  </description>
+
+  <maintainer email="falloutlast888@gmail.com">Kun Hu</maintainer>
+  <author email="falloutlast888@gmail.com">Kun Hu</author>
+  <license>GPL-2.0-only</license>
+
+  <url type="website">https://kj-falloutlast.github.io/CM-LIUW-Odometry/</url>
+  <url type="repository">https://github.com/KJ-Falloutlast/CM-LIUW-Odometry</url>
+  <url type="bugtracker">https://github.com/KJ-Falloutlast/CM-LIUW-Odometry/issues</url>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>message_generation</build_depend>
+  <exec_depend>message_runtime</exec_depend>
+
+  <depend>common_msgs</depend>
+  <depend>eigen_conversions</depend>
+  <depend>geometry_msgs</depend>
+  <depend>livox_ros_driver</depend>
+  <depend>nav_msgs</depend>
+  <depend>pcl_ros</depend>
+  <depend>rosconsole</depend>
+  <depend>roscpp</depend>
+  <depend>rospy</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>tf</depend>
+  <depend>tf_conversions</depend>
+  <depend>visualization_msgs</depend>
+
+  <test_depend>rosbag</test_depend>
+  <test_depend>rostest</test_depend>
+
+  <export/>
+</package>

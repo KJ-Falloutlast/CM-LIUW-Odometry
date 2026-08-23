@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="CM-LIUW icon">
+  <defs>
+    <linearGradient id="g" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f2b84a"/>
+      <stop offset=".48" stop-color="#43e5b4"/>
+      <stop offset="1" stop-color="#4eb8e6"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="#081713"/>
+  <circle cx="32" cy="32" r="21" fill="none" stroke="url(#g)" stroke-width="2" opacity=".45"/>
+  <circle cx="32" cy="32" r="13" fill="none" stroke="url(#g)" stroke-width="2" opacity=".75"/>
+  <circle cx="32" cy="32" r="4" fill="#43e5b4"/>
+  <path d="M32 32 54 19a25 25 0 0 1 2 8Z" fill="url(#g)" opacity=".7"/>
+  <circle cx="52" cy="43" r="2.5" fill="#f2b84a"/>
+  <circle cx="12" cy="25" r="2" fill="#4eb8e6"/>
+</svg>

@@ -1,0 +1,27 @@
+# Catkin workspace artifacts
+.catkin_tools/
+build/
+devel/
+install/
+logs/
+
+# IDE and operating-system files
+.idea/
+.vscode/
+.DS_Store
+*~
+
+# Runtime and dataset artifacts
+*.bag
+*.bag.active
+*.pcd
+*.ply
+*.csv
+*.log
+
+src/cm_liuw_odometry/Log/*
+!src/cm_liuw_odometry/Log/.gitkeep
+src/cm_liuw_odometry/PCD/*
+!src/cm_liuw_odometry/PCD/.gitkeep
+src/cm_liuw_odometry/data/paloc_result/*
+!src/cm_liuw_odometry/data/paloc_result/.gitkeep

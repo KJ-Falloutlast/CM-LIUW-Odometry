@@ -1,0 +1,17 @@
+{
+  "name": "CM-LIUW-Odometry",
+  "short_name": "CM-LIUW",
+  "description": "IROS 2025 multimodal odometry for extreme-degradation coal mine tunnels.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#06100e",
+  "theme_color": "#07110f",
+  "icons": [
+    {
+      "src": "assets/images/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

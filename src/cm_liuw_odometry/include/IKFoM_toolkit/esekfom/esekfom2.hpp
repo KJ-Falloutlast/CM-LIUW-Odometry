@@ -1,0 +1,1102 @@
+
+
+#ifndef ESEKFOM_EKF_HPP
+#define ESEKFOM_EKF_HPP
+
+
+#include <vector>
+#include <cstdlib>
+
+#include <numeric>
+#include <algorithm>
+
+#include <boost/bind.hpp>
+#include <Eigen/Core>
+#include <Eigen/Geometry>
+#include <Eigen/Dense>
+#include <Eigen/Sparse>
+
+#include "../mtk/types/vect.hpp"
+#include "../mtk/types/SOn.hpp"
+#include "../mtk/types/S2.hpp"
+#include "../mtk/startIdx.hpp"
+#include "../mtk/build_manifold.hpp"
+#include "util.hpp"
+
+//#define USE_sparse
+
+
+namespace esekfom {
+
+using namespace Eigen;
+
+//used for iterated error state EKF update
+//for the aim to calculate  measurement (z), estimate measurement (h), partial differention matrices (h_x, h_v) and the noise covariance (R) at the same time, by only one function.
+//applied for measurement as a manifold.(适用于作为流形的测量。)
+template<typename S, typename M, int measurement_noise_dof = M::DOF>
+struct share_datastruct
+{
+	bool valid;
+	bool converge;
+	M z;
+	Eigen::Matrix<typename S::scalar, M::DOF, measurement_noise_dof> h_v;
+	Eigen::Matrix<typename S::scalar, M::DOF, S::DOF> h_x;
+	Eigen::Matrix<typename S::scalar, measurement_noise_dof, measurement_noise_dof> R;
+};
+
+//used for iterated error state EKF update
+//for the aim to calculate  measurement (z), estimate measurement (h), partial differention matrices (h_x, h_v) and the noise covariance (R) at the same time, by only one function.
+//applied for measurement as an Eigen matrix whose dimension is changing(作为维度不断变化的矩阵测量)
+template<typename T>
+struct dyn_share_datastruct
+{
+	bool valid;
+	bool converge;
+	Eigen::Matrix<T, Eigen::Dynamic, 1> z;
+	Eigen::Matrix<T, Eigen::Dynamic, 1> h;
+	Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> h_v;
+	Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> h_x;
+	Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> R;
+};
+
+//used for iterated error state EKF update
+//for the aim to calculate  measurement (z), estimate measurement (h), partial differention matrices (h_x, h_v) and the noise covariance (R) at the same time, by only one function.
+//applied for measurement as a dynamic manifold whose dimension or type is changing(适用于动态流形)
+template<typename T>
+struct dyn_runtime_share_datastruct
+{
+	bool valid;
+	bool converge;
+	//Z z;
+	Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> h_v;//hv
+	Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> h_x;//hx
+	Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> R;//Rs
+};
+
+// esekf类  例如在IMU_Processing.hpp中：esekfom::esekf<state_ikfom, 12, input_ikfom>  后面两个模板参数缺省
+// 其中state_ikfom是状态变量(23维)，input_ikfom是输入u(6维)，也就是IMU的实际测量值    它们在use-ikfom.hpp中定义
+// state = state_ikfom = 23, process_noise_dof = 12  input = input_ikfom = 6
+// 注意：S2是一种空间，一个确定半径的球面构成的空间就被称作2-sphere，也叫S2，
+// DOF指的是对应类型空间的维数，SO3是3维，DOF等于3，DIM指的是用于改变对应空间内状态变量时的外部扰动的维度，旋转角速度可以改变SO3的状态量，所以SO3的DIM是3。
+// 另外，DIM和DOF会在S2上有区别，S2的维度是2维，所以DOF等于2，
+// S2的状态变量也是用旋转角速度改变的，所以S2的DIM与SO3相同，是3。
+// template不要换行
+template <typename state, int process_noise_dof, typename input = state, typename measurement = state, int measurement_noise_dof = 0>
+class esekf {
+    typedef esekf self;
+    enum{ n = state::DOF, m = state::DIM, l = measurement::DOF
+	};
+	// (n, m, l) = (23, 24, l)
+	// delta(x) = m*1, hat(x) = n*1, x = n*1
+	// df_dx=m*n, df_dw = m*12, df_dx_final = n*n = d(delta(x_i+1))/d(delta(x_i)), df_dw_final = n*12
+
+   public:
+    typedef typename state::scalar scalar_type;
+    typedef Matrix<scalar_type, n, n> cov; //23X23的协方差矩阵  最终进行正向传播的矩阵Fx_final(因为状态量x是n维的)  和下面的cov相比主要是在predict函数中减少了一行
+    typedef Matrix<scalar_type, m, n> cov_; // 24X23的协方差矩阵  初始根据论文中定义的矩阵Fx, 少一行是因为2-sphere,维度为2
+    typedef SparseMatrix<scalar_type> spMt;
+    typedef Matrix<scalar_type, n, 1> vectorized_state; // 23X1的向量化的状态变量: x, hat(x)
+    typedef Matrix<scalar_type, m, 1> flatted_state; // 24X1的向量   对应公式(3)的f, delta(x)
+    typedef flatted_state processModel(state &, const input &); // 对应公式(3)的f   f与状态量x和输入u有关
+    typedef Eigen::Matrix<scalar_type, m, n> processMatrix1(state &, const input &); // 对应公式(7)的Fx（24X23）   Fx与状态量x和输入u有关
+    typedef Eigen::Matrix<scalar_type, m, process_noise_dof> processMatrix2(state &, const input &); // 对应公式(7)的Fw（24X12）   Fw与状态量x和输入u有关
+    typedef Eigen::Matrix<scalar_type, process_noise_dof, process_noise_dof> processnoisecovariance; // 对应公式(8)的Q（12X12） 噪声协方差矩阵
+    typedef measurement measurementModel(state &, bool &);
+    typedef measurement measurementModel_share(state &, share_datastruct<state, measurement, measurement_noise_dof> &);
+    typedef Eigen::Matrix<scalar_type, Eigen::Dynamic, 1> measurementModel_dyn(state &, bool &);
+	// typedef Eigen::Matrix<scalar_type, Eigen::Dynamic, 1> measurementModel_dyn_share(state &,  dyn_share_datastruct<scalar_type> &);
+	typedef void measurementModel_dyn_share(state &,  dyn_share_datastruct<scalar_type> &);
+	typedef Eigen::Matrix<scalar_type ,l, n> measurementMatrix1(state &, bool&);
+	typedef Eigen::Matrix<scalar_type , Eigen::Dynamic, n> measurementMatrix1_dyn(state &, bool&);
+	typedef Eigen::Matrix<scalar_type ,l, measurement_noise_dof> measurementMatrix2(state &, bool&);
+	typedef Eigen::Matrix<scalar_type ,Eigen::Dynamic, Eigen::Dynamic> measurementMatrix2_dyn(state &, bool&);
+	typedef Eigen::Matrix<scalar_type, measurement_noise_dof, measurement_noise_dof> measurementnoisecovariance;
+	typedef Eigen::Matrix<scalar_type, Eigen::Dynamic, Eigen::Dynamic> measurementnoisecovariance_dyn;
+
+
+	esekf(const state &x = state(),
+		const cov  &P = cov::Identity()): x_(x), P_(P){ // esekf初始化，主要是初始化了x_和P_
+	#ifdef USE_sparse
+		SparseMatrix<scalar_type> ref(n, n);
+		ref.setIdentity();
+		l_ = ref;
+		f_x_2 = ref;
+		f_x_1 = ref;
+	#endif
+	};
+
+	//receive system-specific models and their differentions.
+	//for measurement as a manifold.
+	void init(processModel f_in, processMatrix1 f_x_in, processMatrix2 f_w_in, measurementModel h_in, measurementMatrix1 h_x_in, measurementMatrix2 h_v_in, int maximum_iteration, scalar_type limit_vector[n])
+	{
+		f = f_in;
+		f_x = f_x_in;
+		f_w = f_w_in;
+		h = h_in;
+		h_x = h_x_in;
+		h_v = h_v_in;
+
+		maximum_iter = maximum_iteration;
+		for(int i=0; i<n; i++)
+		{
+			limit[i] = limit_vector[i];
+		}
+
+		x_.build_S2_state();
+		x_.build_SO3_state();
+		x_.build_vect_state();
+	}
+
+	//receive system-specific models and their differentions.
+	//for measurement as an Eigen matrix whose dimention is chaing.
+	void init_dyn(processModel f_in, processMatrix1 f_x_in, processMatrix2 f_w_in, measurementModel_dyn h_in, measurementMatrix1_dyn h_x_in, measurementMatrix2_dyn h_v_in, int maximum_iteration, scalar_type limit_vector[n])
+	{
+		f = f_in;
+		f_x = f_x_in;
+		f_w = f_w_in;
+		h_dyn = h_in;
+		h_x_dyn = h_x_in;
+		h_v_dyn = h_v_in;
+
+
+		maximum_iter = maximum_iteration;
+		for(int i=0; i<n; i++)
+		{
+			limit[i] = limit_vector[i];
+		}
+
+		x_.build_S2_state();
+		x_.build_SO3_state();
+		x_.build_vect_state();
+	}
+
+	//receive system-specific models and their differentions.
+	//for measurement as a dynamic manifold whose dimension or type is changing.
+	void init_dyn_runtime(processModel f_in, processMatrix1 f_x_in, processMatrix2 f_w_in, measurementMatrix1_dyn h_x_in, measurementMatrix2_dyn h_v_in, int maximum_iteration, scalar_type limit_vector[n])
+	{
+		f = f_in;
+		f_x = f_x_in;
+		f_w = f_w_in;
+		h_x_dyn = h_x_in;
+		h_v_dyn = h_v_in;
+
+		maximum_iter = maximum_iteration;
+		for(int i=0; i<n; i++)
+		{
+			limit[i] = limit_vector[i];
+		}
+
+		x_.build_S2_state();
+		x_.build_SO3_state();
+		x_.build_vect_state();
+	}
+
+	//receive system-specific models and their differentions
+	//for measurement as a manifold.
+	//calculate  measurement (z), estimate measurement (h), partial differention matrices (h_x, h_v) and the noise covariance (R) at the same time, by only one function (h_share_in).
+	void init_share(processModel f_in, processMatrix1 f_x_in, processMatrix2 f_w_in, measurementModel_share h_share_in, int maximum_iteration, scalar_type limit_vector[n])
+	{
+		f = f_in;
+		f_x = f_x_in;
+		f_w = f_w_in;
+		h_share = h_share_in;
+
+		maximum_iter = maximum_iteration;
+		for(int i=0; i<n; i++)
+		{
+			limit[i] = limit_vector[i];
+		}
+
+		x_.build_S2_state();
+		x_.build_SO3_state();
+		x_.build_vect_state();
+	}
+
+	//接收系统特定的模型及其差异
+	//作为特征矩阵的测量，其维数是变化的。
+	//通过一个函数(h_dyn_share_in)完成了测量(z)，估计测量(h)，偏微分矩阵(h_x, h_v)和噪声协方差(R)的同时计算。
+	void init_dyn_share(processModel f_in, processMatrix1 f_x_in, processMatrix2 f_w_in, measurementModel_dyn_share h_dyn_share_in, int maximum_iteration, scalar_type limit_vector[n])
+	{
+		// f_x为use-ikfom的df_dx, f_w为use-ikfom的df_dw
+		f = f_in;
+		f_x = f_x_in;//Fx
+		f_w = f_w_in;//Fw
+		h_dyn_share = h_dyn_share_in;//h_dyn_share为回调函数，该函数在laserMapping构建各个传感器观测模型和观测矩阵
+
+		maximum_iter = maximum_iteration;
+
+		// limit 为 limit_vector, 即limit = epsi[33] = {0.001};
+		for(int i=0; i<n; i++)
+		{
+			limit[i] = limit_vector[i];
+		}
+
+		x_.build_S2_state();
+		x_.build_SO3_state();
+		x_.build_vect_state();
+	}
+
+
+
+	// iterated error state EKF propogation
+	// 状态预测
+	// 对于每个流形，Rn, S2, SO3，都会他状态对应的x部分进行填充，其对应的协方差也是一样
+	void predict(double &dt, processnoisecovariance &Q, const input &i_in){
+
+		// ROS_INFO("cov from esekfom in before predict: ");
+		// auto P_pos_theta_predict = P_. template block<6, 6>(0, 0);
+		// std::cout << P_pos_theta_predict << std::endl;
+
+        in_ = i_in;
+		// f函数对应use-ikfom.hpp中的 get_f函数，对应fast_lio2论文公式(2)
+		flatted_state f_ = f(x_, i_in);//f_in(m*1)
+		// f_x为use-ikfom的df_dx, f_w为use-ikfom的df_dw
+		cov_ f_x_ = f_x(x_, i_in);//m*n
+		cov f_x_final;//n*n,表示d(~x_{i+1})/d(~x_i), d(~x_{i+1})/d(w_i)
+		// 对应use-ikfom.hpp中的 df_dx函数
+		// 对应fast_lio2论文公式(7)
+		Matrix<scalar_type, m, process_noise_dof> f_w_ = f_w(x_, i_in);//Fw = m * noise_dof
+		Matrix<scalar_type, n, process_noise_dof> f_w_final;
+		state x_before = x_;//保存x_的值，用于后面的更新
+
+		// 对应公式fast_lio2公式(2)
+		x_.oplus(f_, dt);//这个是公式2的整个函数，用于更新x的
+
+		F_x1 = cov::Identity();//状态转移矩阵
+
+		/*更新f_x和f_w*/
+		// 补充R3的数据, p, v, ba, bg
+		for (std::vector<std::pair<std::pair<int, int>, int> >::iterator it = x_.vect_state.begin(); it != x_.vect_state.end(); it++) {
+			int idx = (*it).first.first;//状态变量的索引
+			int dim = (*it).first.second;//状态变量的维数
+			int dof = (*it).second;//自由度(扰动维度)
+			// 填充和vector3d有关的fx_final和fw_final
+			for(int i = 0; i < n; i++){
+				for(int j=0; j<dof; j++)
+				{f_x_final(idx+j, i) = f_x_(dim+j, i);}///更新f_x_final，形成n*n阵，用于更新
+			}
+			for(int i = 0; i < process_noise_dof; i++){
+				for(int j=0; j<dof; j++)
+				{f_w_final(idx+j, i) = f_w_(dim+j, i);}//更新f_w_final，形成n*dof，用于更新
+			}
+		}
+
+		// 补充SO3的数据 R
+		Matrix<scalar_type, 3, 3> res_temp_SO3;
+		MTK::vect<3, scalar_type> seg_SO3;//w
+		for (std::vector<std::pair<int, int> >::iterator it = x_.SO3_state.begin(); it != x_.SO3_state.end(); it++) {
+			int idx = (*it).first;//状态变量的索引
+			int dim = (*it).second;//状态变量的维数
+			for(int i = 0; i < 3; i++){
+				seg_SO3(i) = -1 * f_(dim + i) * dt;//拿到S03更新值, -(w_mi - bwi - nwi) * dt
+			}
+			MTK::SO3<scalar_type> res;//残差计算
+			res.w() = MTK::exp<scalar_type, 3>(res.vec(), seg_SO3, scalar_type(1/2));
+		#ifdef USE_sparse
+			res_temp_SO3 = res.toRotationMatrix();
+			for(int i = 0; i < 3; i++){
+				for(int j = 0; j < 3; j++){
+					f_x_1.coeffRef(idx + i, idx + j) = res_temp_SO3(i, j);
+				}
+			}
+		#else
+			// 后面f_x_final要乘dt,所以需要提前初始化
+			F_x1.template block<3, 3>(idx, idx) = res.toRotationMatrix();//Exp(-(w_mi - bwi - nwi) * dt)
+		#endif
+			// 将SO3这一列的行向量填完
+			res_temp_SO3 = MTK::A_matrix(seg_SO3);//转为矩阵形式, A(-(w_mi - bwi - nwi) * dt)
+			// 在fx中把Exp加上
+			for(int i = 0; i < n; i++){
+				f_x_final. template block<3, 1>(idx, i) = res_temp_SO3 * (f_x_. template block<3, 1>(dim, i));
+			}
+			// 在fw中把A(u)加上
+			for(int i = 0; i < process_noise_dof; i++){
+				f_w_final. template block<3, 1>(idx, i) = res_temp_SO3 * (f_w_. template block<3, 1>(dim, i));
+			}
+		}
+
+		// 补充S2的数据，g^G
+		Matrix<scalar_type, 2, 3> res_temp_S2;
+		Matrix<scalar_type, 2, 2> res_temp_S2_;
+		MTK::vect<3, scalar_type> seg_S2;
+		for (std::vector<std::pair<int, int> >::iterator it = x_.S2_state.begin(); it != x_.S2_state.end(); it++) {
+			int idx = (*it).first;
+			int dim = (*it).second;
+			for(int i = 0; i < 3; i++){
+				seg_S2(i) = f_(dim + i) * dt;
+			}
+			MTK::vect<2, scalar_type> vec = MTK::vect<2, scalar_type>::Zero();
+			MTK::SO3<scalar_type> res;
+			res.w() = MTK::exp<scalar_type, 3>(res.vec(), seg_S2, scalar_type(1/2));
+			Eigen::Matrix<scalar_type, 2, 3> Nx;
+			Eigen::Matrix<scalar_type, 3, 2> Mx;
+			x_.S2_Nx_yy(Nx, idx);
+			x_before.S2_Mx(Mx, vec, idx);
+		#ifdef USE_sparse
+			res_temp_S2_ = Nx * res.toRotationMatrix() * Mx;
+			for(int i = 0; i < 2; i++){
+				for(int j = 0; j < 2; j++){
+					f_x_1.coeffRef(idx + i, idx + j) = res_temp_S2_(i, j);
+				}
+			}
+		#else
+			F_x1.template block<2, 2>(idx, idx) = Nx * res.toRotationMatrix() * Mx;
+		#endif
+
+			Eigen::Matrix<scalar_type, 3, 3> x_before_hat;
+			x_before.S2_hat(x_before_hat, idx);
+			res_temp_S2 = -Nx * res.toRotationMatrix() * x_before_hat*MTK::A_matrix(seg_S2).transpose(); // https://zhuanlan.zhihu.com/p/616467806
+
+			for(int i = 0; i < n; i++){
+				f_x_final. template block<2, 1>(idx, i) = res_temp_S2 * (f_x_. template block<3, 1>(dim, i));
+			}
+			for(int i = 0; i < process_noise_dof; i++){
+				f_w_final. template block<2, 1>(idx, i) = res_temp_S2 * (f_w_. template block<3, 1>(dim, i));
+			}
+		}
+
+	#ifdef USE_sparse
+		f_x_1.makeCompressed();
+		spMt f_x2 = f_x_final.sparseView();
+		spMt f_w1 = f_w_final.sparseView();
+		spMt xp = f_x_1 + f_x2 * dt;
+		P_ = xp * P_ * xp.transpose() + (f_w1 * dt) * Q * (f_w1 * dt).transpose();
+	#else
+		//传播状态
+		// Fx = Fx + f_x_fianl * dt
+		F_x1 += f_x_final * dt;
+		// P = Fx * P * Fx.T + (fw * dt) * Q * (fw * dt).T
+		P_ = (F_x1) * P_ * (F_x1).transpose() + (dt * f_w_final) * Q * (dt * f_w_final).transpose();
+	#endif
+		// ROS_INFO("cov from esekfom in predict FPF+FQF: ");
+		// auto P_pos_theta_predict = P_. template block<6, 6>(0, 0);
+		// std::cout << P_pos_theta_predict << std::endl;
+	}
+
+	//iterated error state EKF update for measurement as an Eigen matrix whose dimension is changing.
+	//calculate measurement (z), estimate measurement (h), partial differention matrices (h_x, h_v) and the noise covariance (R) at the same time, by only one function.
+	// hx, hv分别是h对x和v的导数, z为测量(不包括noise)，h为观测方程(包括noise)
+	// 该处是为GNSS和wheel完成更新
+	/**
+	 * @brief
+	 * 1. SO3状态更新:
+	 * 遍历所有SO3状态（通常表示为旋转或方向），对每个状态：
+	 * 计算状态更新矩阵 res_temp_SO3，这是通过对状态变量 seg_SO3 应用 MTK::A_matrix 函数并取转置得到的。
+	 * 使用 res_temp_SO3 更新 L_ 和 P_ 矩阵的相关块，以及 K_ 或 K_x（卡尔曼增益矩阵）的相关块。
+	 * 2. S2状态更新:
+	 * 类似地，遍历所有S2状态（可能表示二维空间中的位置或速度等）：
+	 * 计算更新矩阵 res_temp_S2，这是通过矩阵 Nx 和 Mx 的乘积得到的，这两个矩阵分别从状态和传播状态中提取。
+	 * 使用 res_temp_S2 更新 L_ 和 P_ 矩阵的相关块，以及 K_ 或 K_x 的相关块。
+	 * 3. 协方差矩阵的最终更新:
+	 * 根据系统状态的维度与测量维度的关系，使用不同的方法更新 P_：
+	 * 如果状态维度大于测量维度（n > dof_Measurement），则使用 K_ 和测量矩阵 h_x 更新 P_。
+	 * 否则，使用 K_x 直接更新 P_。
+	 */
+	void update_iterated_dyn_share() {
+
+		int t = 0;
+		dyn_share_datastruct<scalar_type> dyn_share;
+		dyn_share.valid = true;
+		dyn_share.converge = true;
+		state x_propagated = x_;//x^
+		cov P_propagated = P_;//p^
+		int dof_Measurement;//观测维度
+		int dof_Measurement_noise;//观测噪声维度
+		for(int i=-1; i<maximum_iter; i++)
+		{
+			dyn_share.valid = true;
+			h_dyn_share (x_,  dyn_share);//将h_dyn_share赋值给dyn_share
+			//Matrix<scalar_type, Eigen::Dynamic, 1> h = h_dyn_share (x_,  dyn_share);
+             Matrix<scalar_type, Eigen::Dynamic, 1> z = dyn_share.z;
+			Matrix<scalar_type, Eigen::Dynamic, 1> h = dyn_share.h;
+		#ifdef USE_sparse
+			spMt h_x = dyn_share.h_x.sparseView();
+			spMt h_v = dyn_share.h_v.sparseView();
+			spMt R_ = dyn_share.R.sparseView();
+		#else
+			Matrix<scalar_type, Eigen::Dynamic, Eigen::Dynamic> R = dyn_share.R; //v ~ N(0, R),观测噪声协方差
+			Matrix<scalar_type, Eigen::Dynamic, Eigen::Dynamic> h_x = dyn_share.h_x;//H = dh/dx
+			Matrix<scalar_type, Eigen::Dynamic, Eigen::Dynamic> h_v = dyn_share.h_v;//Q = dh/dv
+		#endif
+			dof_Measurement = h_x.rows();
+			dof_Measurement_noise = dyn_share.R.rows();
+			vectorized_state dx, dx_new;
+			x_.boxminus(dx, x_propagated);//dx = x - x_propagated
+			dx_new = dx;//dx_new = dx
+			if(! (dyn_share.valid))
+			{
+				continue;
+			}
+
+			P_ = P_propagated;//P_ = P_propagated
+
+			// SO3的协方差构建
+			Matrix<scalar_type, 3, 3> res_temp_SO3;
+			MTK::vect<3, scalar_type> seg_SO3;
+			for (std::vector<std::pair<int, int> >::iterator it = x_.SO3_state.begin(); it != x_.SO3_state.end(); it++) {
+				int idx = (*it).first;
+				int dim = (*it).second;
+				//此处的dx为第1次迭代的dx, dx = x_k - x^
+				//此处为J^k[0][0] = A(^R_Ik_k - ^R_Ik)^{-T}的^R_Ik_k - ^R_Ik部分
+				for(int i = 0; i < 3; i++){
+					seg_SO3(i) = dx(idx+i);
+				}
+				// res_temp_SO3 = A(^R_Ik_k - ^R_Ik)^{-T}
+				res_temp_SO3 = MTK::A_matrix(seg_SO3).transpose();
+				// dx_new(idx, 0) = A(u).T * dx_new(idx, 0)
+				// template关键字用于明确地告诉编译器，block是一个模板成员函数，尤其是在涉及到模板类的对象（如Eigen::Matrix）时。这是必要的
+				dx_new.template block<3, 1>(idx, 0) = res_temp_SO3 * dx_new.template block<3, 1>(idx, 0);
+				for(int i = 0; i < n; i++){
+					P_. template block<3, 1>(idx, i) = res_temp_SO3 * (P_. template block<3, 1>(idx, i));
+				}
+				for(int i = 0; i < n; i++){
+					P_. template block<1, 3>(i, idx) =(P_. template block<1, 3>(i, idx)) *  res_temp_SO3.transpose();
+				}
+			}
+
+			// S2协方差
+			Matrix<scalar_type, 2, 2> res_temp_S2;
+			MTK::vect<2, scalar_type> seg_S2;
+			for (std::vector<std::pair<int, int> >::iterator it = x_.S2_state.begin(); it != x_.S2_state.end(); it++) {
+				int idx = (*it).first;//idx为dx的id号
+				int dim = (*it).second;//dim为数值
+				for(int i = 0; i < 2; i++){
+					seg_S2(i) = dx(idx + i);
+				}
+
+				Eigen::Matrix<scalar_type, 2, 3> Nx;
+				Eigen::Matrix<scalar_type, 3, 2> Mx;
+				x_.S2_Nx_yy(Nx, idx);
+				x_propagated.S2_Mx(Mx, seg_S2, idx);
+				res_temp_S2 = Nx * Mx;//d(x + u + v - y) / du = Nx * Mx
+				// dx_new(idx, 0) = Nx * Mx * dx_new(idx, 0)
+				dx_new.template block<2, 1>(idx, 0) = res_temp_S2 * dx_new.template block<2, 1>(idx, 0);
+
+				// P(idx, i) = res_temp_S2 * P(idx, i)
+				for(int i = 0; i < n; i++){
+					P_. template block<2, 1>(idx, i) = res_temp_S2 * (P_. template block<2, 1>(idx, i));
+				}
+
+				// P(idx, i) = P(idx, i) * res_temp_S2.T
+				for(int i = 0; i < n; i++){
+					P_. template block<1, 2>(i, idx) = (P_. template block<1, 2>(i, idx)) * res_temp_S2.transpose();
+				}
+			}
+
+			// 卡尔曼增益
+			Matrix<scalar_type, Eigen::Dynamic, Eigen::Dynamic> K_;
+
+			// 若state维度 > 观测维度
+			if(n > dof_Measurement)
+			{
+			#ifdef USE_sparse
+				Matrix<scalar_type, Eigen::Dynamic, Eigen::Dynamic> K_temp = h_x * P_ * h_x.transpose();
+				spMt R_temp = h_v * R_ * h_v.transpose();
+				K_temp += R_temp;
+				K_ = P_ * h_x.transpose() * K_temp.inverse();
+			#else
+				K_= P_ * h_x.transpose() * (h_x * P_ * h_x.transpose() + h_v * R * h_v.transpose()).inverse();
+			#endif
+			}
+			else
+			{
+			#ifdef USE_sparse
+				Eigen::Matrix<scalar_type, Eigen::Dynamic, Eigen::Dynamic> b = Eigen::Matrix<scalar_type, Eigen::Dynamic, Eigen::Dynamic>::Identity(dof_Measurement_noise, dof_Measurement_noise);
+				Eigen::SparseQR<Eigen::SparseMatrix<scalar_type>, Eigen::COLAMDOrdering<int>> solver;
+				solver.compute(R_);
+				Eigen::Matrix<scalar_type, Eigen::Dynamic, Eigen::Dynamic> R_in_temp = solver.solve(b);
+				spMt R_in = R_in_temp.sparseView();
+				spMt K_temp = h_x.transpose() * R_in * h_x;
+				cov P_temp = P_.inverse();
+				P_temp += K_temp;
+				K_ = P_temp.inverse() * h_x.transpose() * R_in;
+			#else
+				// R = (H * R_in * H.T).inv
+				Eigen::Matrix<scalar_type, Eigen::Dynamic, Eigen::Dynamic> R_in = (h_v*R*h_v.transpose()).inverse();
+				// K = (H.T * R * H + P.inv).inv * H.T * R_in
+				K_ = (h_x.transpose() * R_in * h_x + P_.inverse()).inverse() * h_x.transpose() * R_in;
+			#endif
+			}
+
+			// K_x = K * H
+			cov K_x = K_ * h_x;
+			// dx = K * (z - h) + (K_x - I) * dx_new, 这里z = 0,所以dx = -K * h + (K_x - I) * dx_new
+			Matrix<scalar_type, n, 1> dx_ = K_ * (z - h) + (K_x - Matrix<scalar_type, n, n>::Identity()) * dx_new;
+			state x_before = x_;
+			x_.boxplus(dx_);//x = x + dx
+			dyn_share.converge = true;
+
+			// 遍历每个dx中的每个元素, limit = epsi[33] = {0.001};
+			// 如果任何一个分量 > 0.001, 则不收敛，退出迭代
+			for(int i = 0; i < n ; i++)
+			{
+				if(std::fabs(dx_[i]) > limit[i])
+				{
+					dyn_share.converge = false;
+					break;
+				}
+			}
+
+			// 如果收敛，则t++, 迭代10次，t = 10
+			if(dyn_share.converge) t++;
+
+			// 如果收敛 + 倒数第2次迭代
+			if(t > 1 || i == maximum_iter - 1)
+			{
+				// L是一个临时变量，用于在更新过程中存储调整后的协方差矩阵。
+				L_ = P_;//L = P
+//				std::cout << "iteration time:" << t << "," << i << std::endl;
+				Matrix<scalar_type, 3, 3> res_temp_SO3;
+				MTK::vect<3, scalar_type> seg_SO3;//dx
+
+				// 考虑SO3
+				//SO3_state.push_back(std::make_pair(id.IDX, id.DIM))
+				for(typename std::vector<std::pair<int, int> >::iterator it = x_.SO3_state.begin(); it != x_.SO3_state.end(); it++)
+				{
+					int idx = (*it).first;//idx为SO3所在状态的索引idx
+
+					// 重新从收敛后的dx中取出delta_theta部分
+					for(int i = 0; i < 3; i++){
+						seg_SO3(i) = dx_(i + idx);
+					}
+
+					res_temp_SO3 = MTK::A_matrix(seg_SO3).transpose();//A(u).T
+
+					// 将P赋值给L
+					// L = delta_theta * P
+					for(int i = 0; i < int(n); i++){
+						//  K_ = A(u).T * K_(idx, i)
+						L_. template block<3, 1>(idx, i) = res_temp_SO3 * (P_. template block<3, 1>(idx, i));
+					}
+
+					// 若 n > dof_Measurement, K(idx, i) = A(u).T * K_(idx, i)
+					// 否则 K_x(idx, i) = A(u).T * K_x(idx, i)
+					if(n > dof_Measurement)
+					{
+						// K_ = A(u).T * K_(idx, i)
+						for(int i = 0; i < dof_Measurement; i++){
+							K_. template block<3, 1>(idx, i) = res_temp_SO3 * (K_. template block<3, 1>(idx, i));
+						}
+					}
+					else
+					{
+						// Kx(idx, i) = A(u).T * K_(idx, i)
+						for(int i = 0; i < n; i++){
+							K_x. template block<3, 1>(idx, i) = res_temp_SO3 * (K_x. template block<3, 1>(idx, i));
+						}
+					}
+
+					// L(i, idx) = L(i, idx) * A(u).T
+					// P(i, idx) = P(i, idx) * A(u).T
+					for(int i = 0; i < n; i++){
+						L_. template block<1, 3>(i, idx) = (L_. template block<1, 3>(i, idx)) * res_temp_SO3.transpose();
+						P_. template block<1, 3>(i, idx) = (P_. template block<1, 3>(i, idx)) * res_temp_SO3.transpose();
+					}
+				}
+
+				// 考虑S2
+				Matrix<scalar_type, 2, 2> res_temp_S2;
+				MTK::vect<2, scalar_type> seg_S2;//seg_S2 = R_(2 x 1)
+				for(typename std::vector<std::pair<int, int> >::iterator it = x_.S2_state.begin(); it != x_.S2_state.end(); it++) {
+					int idx = (*it).first;
+
+					// 在dx中取出S2给seg_S2
+					for(int i = 0; i < 2; i++){
+						seg_S2(i) = dx_(i + idx);
+					}
+
+					Eigen::Matrix<scalar_type, 2, 3> Nx;
+					Eigen::Matrix<scalar_type, 3, 2> Mx;
+					x_.S2_Nx_yy(Nx, idx);
+					x_propagated.S2_Mx(Mx, seg_S2, idx);
+					res_temp_S2 = Nx * Mx;
+
+					// L = res_temp_S2 * P(idx, i)
+					for(int i = 0; i < n; i++){
+						L_. template block<2, 1>(idx, i) = res_temp_S2 * (P_. template block<2, 1>(idx, i));
+					}
+					if(n > dof_Measurement)
+					{
+						// K = res_temp_S2 * (K(idx, i))
+						for(int i = 0; i < dof_Measurement; i++){
+							K_. template block<2, 1>(idx, i) = res_temp_S2 * (K_. template block<2, 1>(idx, i));
+						}
+					}
+					else
+					{
+						for(int i = 0; i < n; i++){
+							K_x. template block<2, 1>(idx, i) = res_temp_S2 * (K_x. template block<2, 1>(idx, i));
+						}
+					}
+					for(int i = 0; i < n; i++){
+						L_. template block<1, 2>(i, idx) = (L_. template block<1, 2>(i, idx)) * res_temp_S2.transpose();
+						P_. template block<1, 2>(i, idx) = (P_. template block<1, 2>(i, idx)) * res_temp_S2.transpose();
+					}
+				}
+
+				// 进行P和L的更新
+				if(n > dof_Measurement)
+				{
+					P_ = L_ - K_*h_x*P_;//P = L - K * H * P
+				}
+				else
+				{
+					P_ = L_ - K_x * P_; //P = L - K_x * P
+				}
+				// ROS_INFO("cov from dyn_share in maximum iteration P=(I - KH)*P: ");
+				// auto P_pos_theta_dyn_share = P_. template block<6, 6>(0, 0);
+				// std::cout << P_pos_theta_dyn_share << std::endl;
+				return;
+			}
+		}
+	}
+
+
+
+	//iterated error state EKF update modified for one specific system.
+	// 专门用于更新lidar点面约束的EKF更新
+	void update_iterated_dyn_share_modified(double R, double &solve_time) {
+
+		dyn_share_datastruct<scalar_type> dyn_share;// 初始化一个动态共享数据结构，用于在迭代过程中存储和更新状态
+		dyn_share.valid = true;
+		dyn_share.converge = true;
+		int t = 0;
+		// 获取上一次的状态和协方差矩阵
+		state x_propagated = x_;//x^, p^
+		cov P_propagated = P_;
+		int dof_Measurement; //测量值维度
+
+		Matrix<scalar_type, n, 1> K_h;//观测方程h
+		Matrix<scalar_type, n, n> K_x;//观测矩阵H
+
+		/**
+		 * 此处没有以下东西
+		 * dyn_share.z
+		 * dyn_share.h
+		 * R = dyn_share.R
+		 * h_x = dyn_share.h_x
+		 * h_v = dyn_share.h_v
+		 */
+		vectorized_state dx_new = vectorized_state::Zero();//delta x
+		// 进入迭代
+		for(int i=-1; i<maximum_iter; i++)
+		{
+			dyn_share.valid = true;
+			//计算测量模型方程的雅克比，也就是点面残差的导数 H(代码里是h_x)
+			/*重点注意：!!!h_dyn_share(x_, dyn_share)等同于直接调用h_share_model函数，直接完成了传感器观测方程，观测矩阵的构建*/
+			h_dyn_share(x_, dyn_share);//利用x, dyn_share初始化观测方程,可以理解为dyn_share为h_dyn_share
+
+			if(! dyn_share.valid)
+			{
+				continue;
+			}
+
+			//Matrix<scalar_type, Eigen::Dynamic, 1> h = h_dyn_share(x_, dyn_share);
+			#ifdef USE_sparse
+				spMt h_x_ = dyn_share.h_x.sparseView();
+			#else
+				//获取测量模型的雅克比d(pos, rot, 0, 0)/dx, 这里专门针对点面残差约束
+				Eigen::Matrix<scalar_type, Eigen::Dynamic, 12> h_x_ = dyn_share.h_x;//取出点面残差观测
+			#endif
+			double solve_start = omp_get_wtime();
+			dof_Measurement = h_x_.rows();//观测方程个数m
+			vectorized_state dx; // 定义误差状态
+			x_.boxminus(dx, x_propagated);//dx^ = x - x_propagated 获取误差dx
+			dx_new = dx;// 用于迭代的误差状态
+
+			// 预测得到的误差状态协方差矩阵
+			//协方差矩阵在迭代过程中不会代入下一次迭代，直到最后一次退出时更新，在迭代过程中
+			P_ = P_propagated;//P
+
+			// ROS_INFO("cov from iterated dyn_share_modified start: ");
+			// auto P_pos_theta = P_. template block<6, 6>(0, 0);
+			// std::cout << P_pos_theta << std::endl;
+
+			// 这一大段都在求协方差的先验更新，大致上是P=(J^-1)*P*(J^-T)如论文式16~18，包括SO3和S2
+			Matrix<scalar_type, 3, 3> res_temp_SO3;//SO3的res
+			MTK::vect<3, scalar_type> seg_SO3;//seg
+			for (std::vector<std::pair<int, int> >::iterator it = x_.SO3_state.begin(); it != x_.SO3_state.end(); it++) {
+				int idx = (*it).first;//id为索引
+				int dim = (*it).second;//dim为维度
+				for(int i = 0; i < 3; i++){
+					seg_SO3(i) = dx(idx+i);
+				}
+
+				res_temp_SO3 = MTK::A_matrix(seg_SO3).transpose();//A(u).T
+				dx_new.template block<3, 1>(idx, 0) = res_temp_SO3 * dx_new.template block<3, 1>(idx, 0);
+				for(int i = 0; i < n; i++){
+					P_. template block<3, 1>(idx, i) = res_temp_SO3 * (P_. template block<3, 1>(idx, i));
+				}
+
+				// P_(i, idx) = P_(i, idx) * res_temp_SO3
+				for(int i = 0; i < n; i++){
+					P_. template block<1, 3>(i, idx) =(P_. template block<1, 3>(i, idx)) *  res_temp_SO3.transpose();
+				}
+			}
+			// ROS_INFO("iterated dyn_share_modified after SO3: ");
+			// P_pos_theta = P_. template block<6, 6>(0, 0);
+			// std::cout << P_pos_theta << std::endl;
+			//S2更新
+			Matrix<scalar_type, 2, 2> res_temp_S2;
+			MTK::vect<2, scalar_type> seg_S2;
+			for (std::vector<std::pair<int, int> >::iterator it = x_.S2_state.begin(); it != x_.S2_state.end(); it++) {
+				int idx = (*it).first;
+				int dim = (*it).second;
+				for(int i = 0; i < 2; i++){
+					seg_S2(i) = dx(idx + i);
+				}
+
+				Eigen::Matrix<scalar_type, 2, 3> Nx;
+				Eigen::Matrix<scalar_type, 3, 2> Mx;
+				x_.S2_Nx_yy(Nx, idx);
+				x_propagated.S2_Mx(Mx, seg_S2, idx);
+				res_temp_S2 = Nx * Mx;
+				dx_new.template block<2, 1>(idx, 0) = res_temp_S2 * dx_new.template block<2, 1>(idx, 0);
+				for(int i = 0; i < n; i++){
+					P_. template block<2, 1>(idx, i) = res_temp_S2 * (P_. template block<2, 1>(idx, i));
+				}
+				for(int i = 0; i < n; i++){
+					P_. template block<1, 2>(i, idx) = (P_. template block<1, 2>(i, idx)) * res_temp_S2.transpose();
+				}
+			}
+			// ROS_INFO("iterated dyn_share_modified after S2: ");
+			// P_pos_theta = P_. template block<6, 6>(0, 0);
+			// std::cout << P_pos_theta << std::endl;
+			//Matrix<scalar_type, n, Eigen::Dynamic> K_;
+			//Matrix<scalar_type, n, 1> K_h;
+			//Matrix<scalar_type, n, n> K_x;
+
+			/*
+			if(n > dof_Measurement)
+			{
+				K_= P_ * h_x_.transpose() * (h_x_ * P_ * h_x_.transpose()/R + Eigen::Matrix<double, Dynamic, Dynamic>::Identity(dof_Measurement, dof_Measurement)).inverse()/R;
+			}
+			else
+			{
+				K_= (h_x_.transpose() * h_x_ + (P_/R).inverse()).inverse()*h_x_.transpose();
+			}
+			*/
+
+			// 状态维度 n > 测量维度 dof_Measurement
+			// 如果状态量维度大于观测方程 n > m，不满秩
+			if(n > dof_Measurement)
+			{
+			//#ifdef USE_sparse
+				//Matrix<scalar_type, Eigen::Dynamic, Eigen::Dynamic> K_temp = h_x * P_ * h_x.transpose();
+				//spMt R_temp = h_v * R_ * h_v.transpose();
+				//K_temp += R_temp;
+
+				// K = O(dof_Measurementm, n)
+				Eigen::Matrix<scalar_type, Eigen::Dynamic, Eigen::Dynamic> h_x_cur = Eigen::Matrix<scalar_type, Eigen::Dynamic, Eigen::Dynamic>::Zero(dof_Measurement, n);
+				//每一次迭代将重新计算增益K，即论文式18
+				h_x_cur.topLeftCorner(dof_Measurement, 12) = h_x_;
+				/*
+				h_x_cur.col(0) = h_x_.col(0);
+				h_x_cur.col(1) = h_x_.col(1);
+				h_x_cur.col(2) = h_x_.col(2);
+				h_x_cur.col(3) = h_x_.col(3);
+				h_x_cur.col(4) = h_x_.col(4);
+				h_x_cur.col(5) = h_x_.col(5);
+				h_x_cur.col(6) = h_x_.col(6);
+				h_x_cur.col(7) = h_x_.col(7);
+				h_x_cur.col(8) = h_x_.col(8);
+				h_x_cur.col(9) = h_x_.col(9);
+				h_x_cur.col(10) = h_x_.col(10);
+				h_x_cur.col(11) = h_x_.col(11);
+				*/
+				// 重新计算增益矩阵K
+				// K = P * H.T * (H * P * H.T / R + I).inv / R
+				Matrix<scalar_type, Eigen::Dynamic, Eigen::Dynamic> K_ = P_ * h_x_cur.transpose() * (h_x_cur * P_ * h_x_cur.transpose()/R + Eigen::Matrix<double, Dynamic, Dynamic>::Identity(dof_Measurement, dof_Measurement)).inverse()/R;
+				K_h = K_ * dyn_share.h; // K × z
+				K_x = K_ * h_x_cur; // K * H
+				// x_{k+1} = x_k + (-K_h - (I - K_h) * J_k^{-1} * (x_k^{\kappa} - x_k^{\hat}))
+			//#else
+			//	K_= P_ * h_x.transpose() * (h_x * P_ * h_x.transpose() + h_v * R * h_v.transpose()).inverse();
+			//#endif
+			}
+			else //若m >= n, 避免求逆矩阵，K按稀疏矩阵分解的方法如论文式20
+			{
+			#ifdef USE_sparse
+				//Eigen::Matrix<scalar_type, n, n> b = Eigen::Matrix<scalar_type, n, n>::Identity();
+				//Eigen::SparseQR<Eigen::SparseMatrix<scalar_type>, Eigen::COLAMDOrdering<int>> solver;
+				spMt A = h_x_.transpose() * h_x_;
+				cov P_temp = (P_/R).inverse();
+				P_temp. template block<12, 12>(0, 0) += A;
+				P_temp = P_temp.inverse();
+				/*
+				Eigen::Matrix<scalar_type, Eigen::Dynamic, Eigen::Dynamic> h_x_cur = Eigen::Matrix<scalar_type, Eigen::Dynamic, Eigen::Dynamic>::Zero(dof_Measurement, n);
+				h_x_cur.col(0) = h_x_.col(0);
+				h_x_cur.col(1) = h_x_.col(1);
+				h_x_cur.col(2) = h_x_.col(2);
+				h_x_cur.col(3) = h_x_.col(3);
+				h_x_cur.col(4) = h_x_.col(4);
+				h_x_cur.col(5) = h_x_.col(5);
+				h_x_cur.col(6) = h_x_.col(6);
+				h_x_cur.col(7) = h_x_.col(7);
+				h_x_cur.col(8) = h_x_.col(8);
+				h_x_cur.col(9) = h_x_.col(9);
+				h_x_cur.col(10) = h_x_.col(10);
+				h_x_cur.col(11) = h_x_.col(11);
+				*/
+				K_ = P_temp. template block<n, 12>(0, 0) * h_x_.transpose();
+				K_x = cov::Zero();
+				K_x. template block<n, 12>(0, 0) = P_inv. template block<n, 12>(0, 0) * HTH;
+				/*
+				solver.compute(R_);
+				Eigen::Matrix<scalar_type, Eigen::Dynamic, Eigen::Dynamic> R_in_temp = solver.solve(b);
+				spMt R_in =R_in_temp.sparseView();
+				spMt K_temp = h_x.transpose() * R_in * h_x;
+				cov P_temp = P_.inverse();
+				P_temp += K_temp;
+				K_ = P_temp.inverse() * h_x.transpose() * R_in;
+				*/
+			#else
+				cov P_temp = (P_/R).inverse(); //P^-1
+				//Eigen::Matrix<scalar_type, 12, Eigen::Dynamic> h_T = h_x_.transpose();
+				Eigen::Matrix<scalar_type, 12, 12> HTH = h_x_.transpose() * h_x_;
+				P_temp. template block<12, 12>(0, 0) += HTH;//P_temp = P_temp + HTH
+				/*
+				Eigen::Matrix<scalar_type, Eigen::Dynamic, Eigen::Dynamic> h_x_cur = Eigen::Matrix<scalar_type, Eigen::Dynamic, Eigen::Dynamic>::Zero(dof_Measurement, n);
+				//std::cout << "line 1767" << std::endl;
+				h_x_cur.col(0) = h_x_.col(0);
+				h_x_cur.col(1) = h_x_.col(1);
+				h_x_cur.col(2) = h_x_.col(2);
+				h_x_cur.col(3) = h_x_.col(3);
+				h_x_cur.col(4) = h_x_.col(4);
+				h_x_cur.col(5) = h_x_.col(5);
+				h_x_cur.col(6) = h_x_.col(6);
+				h_x_cur.col(7) = h_x_.col(7);
+				h_x_cur.col(8) = h_x_.col(8);
+				h_x_cur.col(9) = h_x_.col(9);
+				h_x_cur.col(10) = h_x_.col(10);
+				h_x_cur.col(11) = h_x_.col(11);
+				*/
+				cov P_inv = P_temp.inverse(); // (H_T_H + P^-1)^-1
+				//std::cout << "line 1781" << std::endl;
+				K_h = P_inv. template block<n, 12>(0, 0) * h_x_.transpose() * dyn_share.h; // (H_T_H + P^-1)^-1 * H^T * h(残差) = K * h
+				//std::cout << "line 1780" << std::endl;
+				//cov HTH_cur = cov::Zero();
+				//HTH_cur. template block<12, 12>(0, 0) = HTH;
+				K_x.setZero(); // = cov::Zero();
+				K_x. template block<n, 12>(0, 0) = P_inv. template block<n, 12>(0, 0) * HTH; //(H_T_H + P^-1)^-1 * H_T_H = KH
+				//K_= (h_x_.transpose() * h_x_ + (P_/R).inverse()).inverse()*h_x_.transpose();
+			#endif
+			}
+
+			// K_x = K_ * h_x_;
+			//由于是误差迭代KF，得到的是误差的最优估计！
+			Matrix<scalar_type, n, 1> dx_ = K_h + (K_x - Matrix<scalar_type, n, n>::Identity()) * dx_new; //误差增量后验 K*h + (K*H - I) dx
+			state x_before = x_;//加上校正后的误差状态dx_
+			x_.boxplus(dx_); //根据计算得到的误差增量后验，更新状态量
+			dyn_share.converge = true;
+
+			//判断已收敛的条件是误差的估计值小于阈值
+			for(int i = 0; i < n ; i++)
+			{
+				if(std::fabs(dx_[i]) > limit[i])
+				{
+					dyn_share.converge = false;
+					break;
+				}
+			}
+			if(dyn_share.converge) t++;
+
+			if(!t && i == maximum_iter - 2)
+			{
+				dyn_share.converge = true;
+			}
+			// ROS_INFO("cov from iterated dyn_share_modified after boxplus: ");
+			// P_pos_theta = P_. template block<6, 6>(0, 0);
+			// std::cout << P_pos_theta << std::endl;
+
+			// 迭代完成后更新误差状态协方差矩阵
+			//结束迭代后，更新协方差矩阵的后验值，大致上是P=(I-K*H)*P，如论文式19
+			if(t > 1 || i == maximum_iter - 1)
+			{
+				L_ = P_;
+				//std::cout << "iteration time" << t << "," << i << std::endl;
+				Matrix<scalar_type, 3, 3> res_temp_SO3;
+				MTK::vect<3, scalar_type> seg_SO3;
+				for(typename std::vector<std::pair<int, int> >::iterator it = x_.SO3_state.begin(); it != x_.SO3_state.end(); it++) {
+					int idx = (*it).first;
+					for(int i = 0; i < 3; i++){
+						seg_SO3(i) = dx_(i + idx);
+					}
+					res_temp_SO3 = MTK::A_matrix(seg_SO3).transpose();
+					for(int i = 0; i < n; i++){
+						L_. template block<3, 1>(idx, i) = res_temp_SO3 * (P_. template block<3, 1>(idx, i));
+					}
+					// if(n > dof_Measurement)
+					// {
+					// 	for(int i = 0; i < dof_Measurement; i++){
+					// 		K_.template block<3, 1>(idx, i) = res_temp_SO3 * (K_. template block<3, 1>(idx, i));
+					// 	}
+					// }
+					// else
+					// {
+						for(int i = 0; i < 12; i++){
+							K_x. template block<3, 1>(idx, i) = res_temp_SO3 * (K_x. template block<3, 1>(idx, i));
+						}
+					//}
+					for(int i = 0; i < n; i++){
+						L_. template block<1, 3>(i, idx) = (L_. template block<1, 3>(i, idx)) * res_temp_SO3.transpose();
+						P_. template block<1, 3>(i, idx) = (P_. template block<1, 3>(i, idx)) * res_temp_SO3.transpose();
+					}
+				}
+
+				Matrix<scalar_type, 2, 2> res_temp_S2;
+				MTK::vect<2, scalar_type> seg_S2;
+				for(typename std::vector<std::pair<int, int> >::iterator it = x_.S2_state.begin(); it != x_.S2_state.end(); it++) {
+					int idx = (*it).first;
+
+					for(int i = 0; i < 2; i++){
+						seg_S2(i) = dx_(i + idx);
+					}
+
+					Eigen::Matrix<scalar_type, 2, 3> Nx;
+					Eigen::Matrix<scalar_type, 3, 2> Mx;
+					x_.S2_Nx_yy(Nx, idx);
+					x_propagated.S2_Mx(Mx, seg_S2, idx);
+					res_temp_S2 = Nx * Mx;
+					for(int i = 0; i < n; i++){
+						L_. template block<2, 1>(idx, i) = res_temp_S2 * (P_. template block<2, 1>(idx, i));
+					}
+					// if(n > dof_Measurement)
+					// {
+					// 	for(int i = 0; i < dof_Measurement; i++){
+					// 		K_. template block<2, 1>(idx, i) = res_temp_S2 * (K_. template block<2, 1>(idx, i));
+					// 	}
+					// }
+					// else
+					// {
+						for(int i = 0; i < 12; i++){
+							K_x. template block<2, 1>(idx, i) = res_temp_S2 * (K_x. template block<2, 1>(idx, i));
+						}
+					//}
+					for(int i = 0; i < n; i++){
+						L_. template block<1, 2>(i, idx) = (L_. template block<1, 2>(i, idx)) * res_temp_S2.transpose();
+						P_. template block<1, 2>(i, idx) = (P_. template block<1, 2>(i, idx)) * res_temp_S2.transpose();
+					}
+				}
+
+				// ROS_INFO("cov from iterated dyn_share_modified in maximum iteration after SO3 && S2: ");
+				// P_pos_theta = P_. template block<6, 6>(0, 0);
+				// std::cout << P_pos_theta << std::endl;
+
+				// if(n > dof_Measurement)
+				// {
+				// 	Eigen::Matrix<scalar_type, Eigen::Dynamic, Eigen::Dynamic> h_x_cur = Eigen::Matrix<scalar_type, Eigen::Dynamic, Eigen::Dynamic>::Zero(dof_Measurement, n);
+				// 	h_x_cur.topLeftCorner(dof_Measurement, 12) = h_x_;
+				// 	/*
+				// 	h_x_cur.col(0) = h_x_.col(0);
+				// 	h_x_cur.col(1) = h_x_.col(1);
+				// 	h_x_cur.col(2) = h_x_.col(2);
+				// 	h_x_cur.col(3) = h_x_.col(3);
+				// 	h_x_cur.col(4) = h_x_.col(4);
+				// 	h_x_cur.col(5) = h_x_.col(5);
+				// 	h_x_cur.col(6) = h_x_.col(6);
+				// 	h_x_cur.col(7) = h_x_.col(7);
+				// 	h_x_cur.col(8) = h_x_.col(8);
+				// 	h_x_cur.col(9) = h_x_.col(9);
+				// 	h_x_cur.col(10) = h_x_.col(10);
+				// 	h_x_cur.col(11) = h_x_.col(11);
+				// 	*/
+				// 	P_ = L_ - K_*h_x_cur * P_;
+				// }
+				// else
+				//{
+					P_ = L_ - K_x.template block<n, 12>(0, 0) * P_.template block<12, n>(0, 0);
+				//}
+
+				// ROS_INFO("cov from iterated dyn_share_modified in maximum iteration P=(I - KH)*P: ");
+				// auto P_pos_theta = P_. template block<6, 6>(0, 0);
+				// std::cout << P_pos_theta << std::endl;
+				solve_time += omp_get_wtime() - solve_start;
+				return;
+			}
+			solve_time += omp_get_wtime() - solve_start;
+		}
+	}
+
+	void change_x(state &input_state)
+	{
+		x_ = input_state;
+		if((!x_.vect_state.size())&&(!x_.SO3_state.size())&&(!x_.S2_state.size()))
+		{
+			x_.build_S2_state();
+			x_.build_SO3_state();
+			x_.build_vect_state();
+		}
+	}
+
+	void change_P(cov &input_cov)
+	{
+		P_ = input_cov;
+	}
+
+	const state& get_x() const {
+		return x_;
+	}
+
+	const cov& get_P() const {
+		return P_;
+	}
+
+    const input& get_input() const {
+        return in_;
+    }
+private:
+	state x_;
+    input in_;
+	measurement m_;
+	cov P_;
+	spMt l_;
+	spMt f_x_1;
+	spMt f_x_2;
+	cov F_x1 = cov::Identity();
+	cov F_x2 = cov::Identity();
+	cov L_ = cov::Identity();
+
+	processModel *f;//f: m*1
+	processMatrix1 *f_x;//Fx: m*n
+	processMatrix2 *f_w;//Fw: m*r
+
+	measurementModel *h;//h(观测方程): l*1
+	measurementMatrix1 *h_x;//H: l*n
+	measurementMatrix2 *h_v;//Q: l*noisedof
+
+	measurementModel_dyn *h_dyn;//h: dynamic*1
+	measurementMatrix1_dyn *h_x_dyn;//H: dynamic*n
+	measurementMatrix2_dyn *h_v_dyn;//Q: dynamic*dynamic
+
+	measurementModel_share *h_share;//对应init_share-h: dynamic*1
+	measurementModel_dyn_share *h_dyn_share;//对应wheel和GNSS更新，h_dyn_share，dynamic share
+
+	int maximum_iter = 0;
+	scalar_type limit[n];
+
+	template <typename T>
+     T check_safe_update( T _temp_vec )
+    {
+        T temp_vec = _temp_vec;
+        if ( std::isnan( temp_vec(0, 0) ) )
+        {
+            temp_vec.setZero();
+            return temp_vec;
+        }
+        double angular_dis = temp_vec.block( 0, 0, 3, 1 ).norm() * 57.3;
+        double pos_dis = temp_vec.block( 3, 0, 3, 1 ).norm();
+        if ( angular_dis >= 20 || pos_dis > 1 )
+        {
+            printf( "Angular dis = %.2f, pos dis = %.2f\r\n", angular_dis, pos_dis );
+            temp_vec.setZero();
+        }
+        return temp_vec;
+    }
+public:
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+};
+
+} // namespace esekfom
+
+#endif //  ESEKFOM_EKF_HPP

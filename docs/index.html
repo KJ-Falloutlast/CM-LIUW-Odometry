@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07110f">
+  <meta name="description" content="CM-LIUW-Odometry — robust LiDAR-Inertial-UWB-Wheel odometry for extreme-degradation coal mine tunnels, accepted by IROS 2025.">
+  <meta name="author" content="Kun Hu, Menggang Li, Zhiwen Jin, Chaoquan Tang, Eryi Hu, Gongbo Zhou">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="CM-LIUW-Odometry | IROS 2025">
+  <meta property="og:description" content="Robust and high-precision multimodal odometry for long, repetitive, GPS-denied coal mine tunnels.">
+  <meta property="og:url" content="https://kj-falloutlast.github.io/CM-LIUW-Odometry/">
+  <meta property="og:image" content="https://kj-falloutlast.github.io/CM-LIUW-Odometry/assets/images/coal-mine-results.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="CM-LIUW-Odometry | IROS 2025">
+  <meta name="twitter:description" content="LiDAR · IMU · UWB · Wheel — one adaptive IESKF for extreme-degradation tunnels.">
+  <meta name="twitter:image" content="https://kj-falloutlast.github.io/CM-LIUW-Odometry/assets/images/coal-mine-results.jpg">
+  <link rel="canonical" href="https://kj-falloutlast.github.io/CM-LIUW-Odometry/">
+  <link rel="icon" href="assets/images/favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="site.webmanifest">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <title>CM-LIUW-Odometry | IROS 2025</title>
+</head>
+<body>
+  <div class="page-progress" aria-hidden="true"><span></span></div>
+  <div class="cursor-glow" aria-hidden="true"></div>
+
+  <header class="site-header" id="top">
+    <nav class="nav-shell" aria-label="Primary navigation">
+      <a class="brand" href="#top" aria-label="CM-LIUW-Odometry home">
+        <img src="assets/images/favicon.svg" alt="" width="34" height="34">
+        <span>CM·LIUW</span>
+      </a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links" aria-label="Open navigation">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a href="#overview">Overview</a>
+        <a href="#method">Method</a>
+        <a href="#results">Results</a>
+        <a href="#dataset">Dataset</a>
+        <a href="#citation">Citation</a>
+        <a class="nav-code" href="https://github.com/KJ-Falloutlast/CM-LIUW-Odometry" target="_blank" rel="noopener">Code <span aria-hidden="true">↗</span></a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-grid" aria-hidden="true"></div>
+      <div class="hero-beam hero-beam-one" aria-hidden="true"></div>
+      <div class="hero-beam hero-beam-two" aria-hidden="true"></div>
+      <div class="lidar-orbit" aria-hidden="true">
+        <span class="orbit orbit-one"></span>
+        <span class="orbit orbit-two"></span>
+        <span class="orbit orbit-three"></span>
+        <span class="scan-line"></span>
+        <i></i><i></i><i></i><i></i><i></i>
+      </div>
+
+      <div class="shell hero-content">
+        <div class="venue-pill reveal"><span></span>IROS 2025 · Hangzhou</div>
+        <p class="hero-kicker reveal">LiDAR · IMU · UWB · WHEEL</p>
+        <h1 id="hero-title" class="reveal">CM-LIUW-<br><em>Odometry</em></h1>
+        <p class="hero-subtitle reveal">Robust and High-Precision LiDAR-Inertial-UWB-Wheel Odometry for Extreme Degradation Coal Mine Tunnels</p>
+
+        <div class="authors reveal" aria-label="Authors">
+          <a href="https://github.com/KJ-Falloutlast" target="_blank" rel="noopener">Kun Hu</a>
+          <a href="https://orcid.org/0000-0002-2395-9543" target="_blank" rel="noopener">Menggang Li<sup>†</sup></a>
+          <a href="https://orcid.org/0009-0008-6412-4711" target="_blank" rel="noopener">Zhiwen Jin</a>
+          <a href="https://orcid.org/0000-0003-1641-9845" target="_blank" rel="noopener">Chaoquan Tang</a>
+          <a href="https://orcid.org/0000-0002-3932-4542" target="_blank" rel="noopener">Eryi Hu</a>
+          <a href="https://orcid.org/0000-0002-8672-2535" target="_blank" rel="noopener">Gongbo Zhou</a>
+        </div>
+        <p class="affiliations reveal"><sup>1</sup> China University of Mining and Technology &nbsp;·&nbsp; <sup>2</sup> Information Institute, Ministry of Emergency Management</p>
+
+        <div class="hero-actions reveal">
+          <a class="button button-primary" href="https://doi.org/10.1109/IROS60139.2025.11245914" target="_blank" rel="noopener">
+            <span class="button-icon" aria-hidden="true">▱</span> Paper
+          </a>
+          <a class="button button-secondary" href="https://arxiv.org/abs/2511.01379" target="_blank" rel="noopener">arXiv <span aria-hidden="true">↗</span></a>
+          <a class="button button-secondary" href="https://github.com/KJ-Falloutlast/CM-LIUW-Odometry" target="_blank" rel="noopener">Code <span aria-hidden="true">↗</span></a>
+          <a class="button button-secondary" href="https://www.bilibili.com/video/BV1ThVZ6LESW/" target="_blank" rel="noopener">Video <span aria-hidden="true">▶</span></a>
+        </div>
+
+        <div class="hero-frame reveal">
+          <a href="assets/images/coal-mine-results.jpg" target="_blank" rel="noopener" aria-label="Open the full-resolution qualitative comparison">
+            <img src="assets/images/coal-mine-results.jpg" alt="Qualitative mapping comparison between CM-LIUW-Odometry, ablations, FAST-LIO2, DLIO, IG-LIO, and LIO-SAM" width="3152" height="1563">
+          </a>
+          <div class="frame-caption">
+            <span><i></i> Real-world coal mine experiment</span>
+            <span>Click to inspect <b>↗</b></span>
+          </div>
+        </div>
+      </div>
+
+      <a class="scroll-cue" href="#overview" aria-label="Scroll to overview">
+        <span>Explore</span><i></i>
+      </a>
+    </section>
+
+    <div class="sensor-marquee" aria-hidden="true">
+      <div>
+        <span>LiDAR</span><b>+</b><span>IMU</span><b>+</b><span>UWB</span><b>+</b><span>Wheel</span><b>→</b><span>Adaptive IESKF</span><b>·</b>
+        <span>LiDAR</span><b>+</b><span>IMU</span><b>+</b><span>UWB</span><b>+</b><span>Wheel</span><b>→</b><span>Adaptive IESKF</span><b>·</b>
+      </div>
+    </div>
+
+    <section class="section challenge" id="overview">
+      <div class="shell">
+        <div class="section-heading reveal">
+          <p class="eyebrow">01 · The challenge</p>
+          <h2>When GPS disappears,<br><em>geometry can disappear too.</em></h2>
+          <p>Long, repetitive coal mine tunnels create a rare combination of unavailable global positioning, weak geometric observability, slippery terrain, dust, and limited UWB deployment range.</p>
+        </div>
+
+        <div class="challenge-grid">
+          <article class="challenge-card reveal">
+            <span class="card-index">01</span>
+            <div class="card-glyph" aria-hidden="true"><i class="gps-slash"></i></div>
+            <h3>GPS-denied</h3>
+            <p>No satellite reference underground means drift cannot be corrected by conventional GNSS.</p>
+          </article>
+          <article class="challenge-card reveal">
+            <span class="card-index">02</span>
+            <div class="card-glyph tunnel-glyph" aria-hidden="true"><i></i><i></i><i></i></div>
+            <h3>Feature-poor</h3>
+            <p>Long, straight, repetitive surfaces weaken LiDAR observability and can trigger catastrophic degeneration.</p>
+          </article>
+          <article class="challenge-card reveal">
+            <span class="card-index">03</span>
+            <div class="card-glyph range-glyph" aria-hidden="true"><i></i><i></i></div>
+            <h3>Range-limited</h3>
+            <p>UWB provides global constraints near anchors, but mine-scale coverage is expensive and spatially limited.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section method" id="method">
+      <div class="shell">
+        <div class="section-heading split-heading reveal">
+          <div>
+            <p class="eyebrow">02 · The method</p>
+            <h2>One estimator.<br><em>Three motion modes.</em></h2>
+          </div>
+          <p>CM-LIUW-Odometry tightly couples heterogeneous measurements in a 36-dimensional IESKF state, then uses covariance decomposition to decide when wheel constraints should support a degenerating LiDAR–inertial estimate.</p>
+        </div>
+
+        <figure class="method-figure reveal">
+          <div class="figure-topbar"><span></span><span></span><span></span><b>system_overview.svg</b></div>
+          <img src="assets/images/system-overview.jpg" alt="CM-LIUW-Odometry system architecture" loading="lazy" width="1017" height="405">
+          <figcaption>Four measurement streams, unified by iterative state updates and adaptive degeneration handling.</figcaption>
+        </figure>
+
+        <div class="mode-track reveal">
+          <article>
+            <span class="mode-code">LIU</span>
+            <small>Inside UWB range</small>
+            <h3>Global alignment</h3>
+            <p>LiDAR–inertial estimation receives absolute UWB position and range constraints.</p>
+          </article>
+          <div class="mode-arrow" aria-hidden="true"><span>exit coverage</span><i></i></div>
+          <article>
+            <span class="mode-code">LIO</span>
+            <small>Observable geometry</small>
+            <h3>Efficient odometry</h3>
+            <p>LiDAR and IMU carry the estimate while the covariance remains well conditioned.</p>
+          </article>
+          <div class="mode-arrow" aria-hidden="true"><span>detect degeneration</span><i></i></div>
+          <article class="mode-highlight">
+            <span class="mode-code">LIW</span>
+            <small>Degenerate geometry</small>
+            <h3>Wheel-assisted stability</h3>
+            <p>NHC and lever-arm compensated wheel updates suppress drift beyond UWB range.</p>
+          </article>
+        </div>
+
+        <div class="contribution-grid">
+          <article class="contribution reveal">
+            <span>Global</span>
+            <h3>UWB position + range</h3>
+            <p>Aligns the local SLAM state with the total-station global frame and rejects range outliers.</p>
+          </article>
+          <article class="contribution reveal">
+            <span>Robust</span>
+            <h3>Wheel + NHC</h3>
+            <p>Adds forward-motion information with nonholonomic constraints and calibrated lever-arm compensation.</p>
+          </article>
+          <article class="contribution reveal">
+            <span>Adaptive</span>
+            <h3>Covariance SVD</h3>
+            <p>Finds the direction and severity of weak observability without a fixed scene-specific motion policy.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section results" id="results">
+      <div class="shell">
+        <div class="section-heading split-heading reveal">
+          <div>
+            <p class="eyebrow">03 · Real-world results</p>
+            <h2>Stability beyond<br><em>the anchor boundary.</em></h2>
+          </div>
+          <p>Experiments on the CUMT 5 platform compare the complete system against ablations and four state-of-the-art odometry methods in a long, extremely degraded underground tunnel.</p>
+        </div>
+
+        <div class="result-stats">
+          <article class="stat reveal"><strong data-count="4.919">4.919</strong><span>AvgErr · Ours</span></article>
+          <article class="stat reveal"><strong data-count="73.789">73.789</strong><span>TotalErr · Ours</span></article>
+          <article class="stat reveal"><strong data-count="15">15</strong><span>Total-station points</span></article>
+          <article class="stat reveal"><strong data-count="0.3">0.3</strong><span>Robot speed · m/s</span></article>
+        </div>
+
+        <figure class="result-figure reveal">
+          <a href="assets/images/coal-mine-results.jpg" target="_blank" rel="noopener">
+            <img src="assets/images/coal-mine-results.jpg" alt="Underground tunnel mapping comparison" loading="lazy" width="3152" height="1563">
+          </a>
+          <figcaption>
+            <span><b>Ours</b> retains a coherent map after leaving the UWB region.</span>
+            <span>Ablations and comparison methods exhibit drift, degeneration, or failure.</span>
+          </figcaption>
+        </figure>
+
+        <div class="video-block reveal">
+          <div class="video-copy">
+            <p class="eyebrow">Field demonstration</p>
+            <h3>See the estimator move through the tunnel.</h3>
+            <p>Watch the complete IROS 2025 demonstration, including the underground platform and mapping comparison.</p>
+            <a class="button button-primary" href="https://www.bilibili.com/video/BV1ThVZ6LESW/" target="_blank" rel="noopener">Watch on Bilibili <span aria-hidden="true">↗</span></a>
+          </div>
+          <a class="video-poster" href="https://www.bilibili.com/video/BV1ThVZ6LESW/" target="_blank" rel="noopener" aria-label="Watch the CM-LIUW-Odometry demonstration on Bilibili">
+            <img src="assets/images/coal-mine-results.jpg" alt="CM-LIUW-Odometry video poster" loading="lazy" width="3152" height="1563">
+            <span class="play-button" aria-hidden="true">▶</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section dataset" id="dataset">
+      <div class="shell dataset-shell">
+        <div class="dataset-copy reveal">
+          <p class="eyebrow">04 · Dataset</p>
+          <h2>Coal mine data,<br><em>prepared for release.</em></h2>
+          <p>The public archive is being packaged with the calibration, metadata, checksums, and usage terms needed for reproducible evaluation. We will publish the primary and mirror links here and in GitHub Releases.</p>
+          <div class="dataset-actions">
+            <span class="button button-disabled" aria-disabled="true"><i></i> Dataset · Coming soon</span>
+            <a class="text-link" href="https://github.com/KJ-Falloutlast/CM-LIUW-Odometry/releases" target="_blank" rel="noopener">Watch releases <span>↗</span></a>
+          </div>
+        </div>
+
+        <div class="dataset-card reveal">
+          <div class="dataset-status"><span></span>Packaging in progress</div>
+          <h3>CM-LIUW-CoalMine</h3>
+          <p>Extreme-degradation underground tunnel sequence collected by the CUMT 5 mobile robot.</p>
+          <dl>
+            <div><dt>LiDAR</dt><dd>Robosense 32</dd></div>
+            <div><dt>IMU</dt><dd>Xsens-G710</dd></div>
+            <div><dt>UWB</dt><dd>p440 + 4 anchors</dd></div>
+            <div><dt>Motion</dt><dd>Wheel odometry</dd></div>
+            <div><dt>Reference</dt><dd>Total station</dd></div>
+            <div><dt>Format</dt><dd>ROS bag + calibration</dd></div>
+          </dl>
+          <div class="dataset-package" aria-label="Planned dataset contents">
+            <span>raw.bag</span><span>calib.yaml</span><span>groundtruth.csv</span><span>SHA256SUMS</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section citation" id="citation">
+      <div class="shell citation-shell">
+        <div class="section-heading reveal">
+          <p class="eyebrow">05 · Citation</p>
+          <h2>Build on our work.</h2>
+          <p>If CM-LIUW-Odometry contributes to your research, please cite the IROS 2025 paper.</p>
+        </div>
+        <div class="code-card reveal">
+          <div class="code-topbar"><span>BibTeX</span><button class="copy-button" type="button" data-copy="bibtex">Copy</button></div>
+          <pre id="bibtex"><code>@inproceedings{hu2025cmliuw,
+  author    = {Kun Hu and Menggang Li and Zhiwen Jin and
+               Chaoquan Tang and Eryi Hu and Gongbo Zhou},
+  title     = {{CM-LIUW-Odometry}: Robust and High-Precision
+               {LiDAR}-Inertial-{UWB}-Wheel Odometry for Extreme
+               Degradation Coal Mine Tunnels},
+  booktitle = {2025 IEEE/RSJ International Conference on
+               Intelligent Robots and Systems (IROS)},
+  year      = {2025},
+  pages     = {7139--7146},
+  doi       = {10.1109/IROS60139.2025.11245914}
+}</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="closing">
+      <div class="shell reveal">
+        <p>Robust autonomy where</p>
+        <h2>GPS <span>and</span> geometry<br>both disappear.</h2>
+        <div class="closing-actions">
+          <a class="button button-primary" href="https://github.com/KJ-Falloutlast/CM-LIUW-Odometry" target="_blank" rel="noopener">Explore the code <span aria-hidden="true">↗</span></a>
+          <a class="button button-secondary" href="https://arxiv.org/abs/2511.01379" target="_blank" rel="noopener">Read the paper</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="shell footer-grid">
+      <div>
+        <a class="brand" href="#top"><img src="assets/images/favicon.svg" alt="" width="30" height="30"><span>CM·LIUW</span></a>
+        <p>© <span id="year">2026</span> CM-LIUW-Odometry authors.</p>
+      </div>
+      <div class="footer-links">
+        <a href="https://doi.org/10.1109/IROS60139.2025.11245914" target="_blank" rel="noopener">Paper</a>
+        <a href="https://arxiv.org/abs/2511.01379" target="_blank" rel="noopener">arXiv</a>
+        <a href="https://github.com/KJ-Falloutlast/CM-LIUW-Odometry" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://www.bilibili.com/video/BV1ThVZ6LESW/" target="_blank" rel="noopener">Video</a>
+      </div>
+      <p class="inspiration">Academic project-page references: <a href="https://viral-humanoid.github.io/" target="_blank" rel="noopener">VIRAL</a>, <a href="https://www.zhengyiluo.com/PDC-Site/" target="_blank" rel="noopener">PDC</a>, and <a href="https://hover-versatile-humanoid.github.io/" target="_blank" rel="noopener">HOVER</a>.</p>
+    </div>
+  </footer>
+
+  <script src="assets/js/main.js" defer></script>
+</body>
+</html>

@@ -1,167 +1,240 @@
 <div align="center">
-    <h1><strong>CM-LIUW-Odometry<strong></h1>
-    <h2><strong>Robust and High-Precision LiDAR-Inertial-UWB-Wheel Odometry for Extreme Degradation Coal Mine Tunnels</strong></h2>
-    <a href="https://github.com/KJ-Falloutlast" target='_blank'>Kun Hu</a><sup>1</sup>&nbsp;&nbsp;&nbsp;
-    <a href="https://orcid.org/0000-0002-2395-9543" target='_blank'>Menggang Li</a><sup>1,†</sup>&nbsp;&nbsp;&nbsp;
-    <a href="https://orcid.org/0009-0008-6412-4711" target='_blank'>Zhiwen Jin</a><sup>1</sup>&nbsp;&nbsp;&nbsp;
-    <a href="https://orcid.org/0000-0003-1641-9845" target='_blank'>Chaoquan Tang</a><sup>1</sup>&nbsp;&nbsp;&nbsp;
-    <a href="https://orcid.org/0000-0002-3932-4542" target='_blank'>Eryi Hu</a><sup>2</sup>&nbsp;&nbsp;&nbsp;
-    <a href="https://orcid.org/0000-0002-8672-2535" target='_blank'>Gongbo Zhou</a><sup>1</sup>&nbsp;&nbsp;&nbsp;
-    </br></br>
-    <sup>1</sup>CUMT(XuZhou)&nbsp;&nbsp;&nbsp;
-    <sup>2</sup>Information Institute&nbsp;&nbsp;&nbsp;
-    </br></br>
-    († Corresponding author)  
-</div>
 
-<div align="center">
-    <!-- <a href="https://hits.seeyoufarm.com">
-        <img src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Fchengwei0427%2FAdaptive-LIO&count_bg=%2300B48B&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=Visitors&edge_flat=false"/></a> -->
-        <!-- <a href="https://ieeexplore.ieee.org/document/10806842"><img src="https://img.shields.io/badge/Paper-IEEE JIOT2024-004088.svg"/></a> -->
-        <a href="https://arxiv.org/abs/2511.01379"><img src='https://img.shields.io/badge/ArXiv-CM_LIUW_Odometry-red' alt='Paper PDF'></a>
+# CM-LIUW-Odometry
 
-[![GitHub Stars](https://img.shields.io/github/stars/KJ-Falloutlast/CM-LIUW-Odometry)](https://github.com/KJ-Falloutlast/CM-LIUW-Odometry/stargazers) 
-[![GitHub Forks](https://img.shields.io/github/forks/KJ-Falloutlast/CM-LIUW-Odometry)](https://github.com/KJ-Falloutlast/CM-LIUW-Odometry/fork)
-[![GitHub Issues](https://img.shields.io/github/issues/KJ-Falloutlast/CM-LIUW-Odometry)](https://github.com/KJ-Falloutlast/CM-LIUW-Odometry/issues)
+### Robust and High-Precision LiDAR-Inertial-UWB-Wheel Odometry for Extreme Degradation Coal Mine Tunnels
 
-<a ><img alt="PRs-Welcome" src="https://img.shields.io/badge/PRs-Welcome-red" /></a>
-<a href="https://github.com/KJ-Falloutlast/CM-LIUW-Odometry/"><img src="https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black" /></a>
-<!-- [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT) -->
+**IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS 2025)**
 
+[Kun Hu](https://github.com/KJ-Falloutlast)<sup>1</sup> ·
+[Menggang Li](https://orcid.org/0000-0002-2395-9543)<sup>1,†</sup> ·
+[Zhiwen Jin](https://orcid.org/0009-0008-6412-4711)<sup>1</sup> ·
+[Chaoquan Tang](https://orcid.org/0000-0003-1641-9845)<sup>1</sup> ·
+[Eryi Hu](https://orcid.org/0000-0002-3932-4542)<sup>2</sup> ·
+[Gongbo Zhou](https://orcid.org/0000-0002-8672-2535)<sup>1</sup>
 
+<sup>1</sup> China University of Mining and Technology, Xuzhou, China<br>
+<sup>2</sup> Information Institute, Ministry of Emergency Management, China<br>
+<sup>†</sup> Corresponding author
+
+[![Project Page](https://img.shields.io/badge/Project-Page-21d4b4?style=for-the-badge&logo=githubpages&logoColor=white)](https://kj-falloutlast.github.io/CM-LIUW-Odometry/)
+[![Paper](https://img.shields.io/badge/Paper-IROS%202025-f3b941?style=for-the-badge&logo=ieee&logoColor=white)](https://doi.org/10.1109/IROS60139.2025.11245914)
+[![arXiv](https://img.shields.io/badge/arXiv-2511.01379-b31b1b?style=for-the-badge&logo=arxiv&logoColor=white)](https://arxiv.org/abs/2511.01379)
+[![Dataset](https://img.shields.io/badge/Dataset-Coming%20Soon-53657d?style=for-the-badge&logo=databricks&logoColor=white)](#dataset)
+
+[![Ubuntu](https://img.shields.io/badge/Ubuntu-20.04-E95420?logo=ubuntu&logoColor=white)](https://releases.ubuntu.com/20.04/)
+[![ROS](https://img.shields.io/badge/ROS-Noetic-22314E?logo=ros&logoColor=white)](https://wiki.ros.org/noetic)
+[![License](https://img.shields.io/badge/License-GPL--2.0--only-4c8eda.svg)](LICENSE)
+[![GitHub Stars](https://img.shields.io/github/stars/KJ-Falloutlast/CM-LIUW-Odometry?style=social)](https://github.com/KJ-Falloutlast/CM-LIUW-Odometry/stargazers)
+
+**[Project Page](https://kj-falloutlast.github.io/CM-LIUW-Odometry/)** ·
+**[Paper](https://doi.org/10.1109/IROS60139.2025.11245914)** ·
+**[arXiv](https://arxiv.org/abs/2511.01379)** ·
+**[Video](https://www.bilibili.com/video/BV1ThVZ6LESW/)** ·
+**[Dataset](#dataset)** ·
+**[Citation](#citation)**
 
 </div>
 
 <p align="center">
-  <a href="https://www.bilibili.com/video/BV1ThVZ6LESW/?vd_source=5c424a291ee45d557316e22fd7960e7f">
-    <img src="./doc/Fig10-现场实验建图效果对比.jpg" width="80%" alt="CM-LIUW-Odometry Video">
+  <a href="https://www.bilibili.com/video/BV1ThVZ6LESW/">
+    <img src="doc/Fig10-现场实验建图效果对比.jpg" width="96%" alt="CM-LIUW-Odometry qualitative mapping comparison in a coal mine tunnel">
   </a>
-  <br><em>Click the image above to watch the CM-LIUW-Odometry demonstration (IROS 2025).</em>
+  <br>
+  <em>CM-LIUW-Odometry remains stable after leaving UWB coverage, while LiDAR-only and ablated variants drift or degenerate. Click to watch the IROS 2025 demonstration.</em>
 </p>
 
-## :memo: Overview
+## At a glance
 
-Simultaneous Localization and Mapping (SLAM) in large-scale, complex, and GPS-denied underground coal mine environments presents significant challenges. Sensors must contend with abnormal operating conditions: GPS unavailability impedes scene reconstruction and absolute geographic referencing, uneven or slippery terrain degrades wheel odometer accuracy, and long, feature-poor tunnels reduce LiDAR effectiveness. To address these issues, we propose CoalMine-LiDAR-IMU-UWB-Wheel-Odometry (**CM-LIUW-Odometry**), a multimodal SLAM framework based on the Iterated Error-State Kalman Filter (IESKF). First, LiDAR-inertial odometry is tightly fused with UWB absolute positioning constraints to align the SLAM system with a global coordinate. Next, wheel odometer is integrated through tight coupling, enhanced by nonholonomic constraints (NHC) and vehicle lever arm compensation, to address performance degradation in areas beyond UWB measurement range. Finally, an adaptive motion mode switching mechanism dynamically adjusts the robot’s motion mode based on UWB measurement range and environmental degradation levels. Experimental results validate that our method achieves superior accuracy and robustness in real-world underground coal mine scenarios, outperforming state-of-the-art approaches. We open source our code of this work on Github to benefit the robotics community.
+CM-LIUW-Odometry is a tightly coupled **LiDAR–IMU–UWB–wheel** odometry system for long, repetitive, GPS-denied coal mine tunnels. It combines global UWB constraints, wheel odometry with nonholonomic and lever-arm compensation, and covariance-based degradation detection inside one Iterated Error-State Kalman Filter (IESKF). The estimator switches between **LIU**, **LIO**, and **LIW** modes according to UWB availability and environmental degeneracy.
+
+| Global reference | Beyond UWB range | Degeneracy awareness | Estimator |
+|:---:|:---:|:---:|:---:|
+| UWB position + range | Wheel odometry + NHC | Covariance PCA/SVD | Tightly coupled IESKF |
+
+## News
+
+- **2026-08-23** — Source code, reproducible installation guide, and project page released. Dataset packaging is in progress.
+- **2025-11-04** — Updated manuscript released on [arXiv](https://arxiv.org/abs/2511.01379).
+- **2025-06-16** — CM-LIUW-Odometry accepted to **IROS 2025**. 🎉
+
+## Method
 
 <p align="center">
-  <img src="./doc/Fig2-system_overview.jpg" width="90%">
-  <br><em>The system flow of CM-LIUW-Odometry.</em>
+  <img src="doc/Fig2-system_overview.jpg" width="94%" alt="CM-LIUW-Odometry system overview">
+  <br>
+  <em>System overview. UWB, LiDAR, IMU, and wheel constraints are updated in a unified IESKF.</em>
 </p>
 
+The system contributes three components for extreme-degradation tunnels:
 
-## :memo: Updates
+1. **Global-coordinate alignment.** UWB position and range residuals constrain LiDAR–inertial odometry inside the UWB coverage region.
+2. **Robust estimation beyond UWB.** Tightly coupled wheel odometry, nonholonomic constraints, and lever-arm compensation suppress drift after UWB measurements disappear.
+3. **Adaptive motion modes.** Covariance decomposition detects the direction and severity of degeneration and activates the appropriate LIU/LIO/LIW fusion mode.
 
-- \[2025.06.16\] - **CM-LIUW-Odometry** is accepted to IROS 2025. :rocket:
-<!-- - \[2025.03\] -   Source code released  **🎉** -->
+## Installation
 
-- \[2025.11.04\] - Released an updated version of the [**CM-LIUW-Odometry**](https://arxiv.org/abs/2511.01379) paper. :rocket:
+### 1. Tested environment
 
+The default, core estimator has been tested with the following software stack:
 
+- Ubuntu 20.04 LTS, ROS Noetic, GCC 9.4
+- CMake ≥ 3.10 and C++14
+- Eigen 3, PCL 1.8+, OpenCV 4, Ceres Solver, GeographicLib, Boost
+- `catkin_tools`
+- Livox ROS Driver v2.6.x for Livox `CustomMsg` support
 
-## 📁 Dataset
-<!-- 
-<table>
-  <tr>
-    <th style="text-align:center">Dataset</th>
-    <th style="text-align:center">Full Name</th>
-    <th style="text-align:center">Duration (s)</th>
-    <th style="text-align:center">Distance (km)</th>
-    <th style="text-align:center">LiDAR Type</th>
-  </tr>
-  <tr>
-    <td style="text-align:center">QiSheng</td>
-    <td style="text-align:center"><a href="https://pan.baidu.com/s/1FBHpDxpykGApxJESxXfk5Q?pwd=yjad" target="_blank">industrial</td>
-    <td style="text-align:center">485</td>
-    <td style="text-align:center">00</td>
-    <td style="text-align:center">Velodyne VLP-16</td>
-  </tr>
-  <tr>
-    <td style="text-align:center">QiSheng</td>
-    <td style="text-align:center"><a href="https://pan.baidu.com/s/1uSNeHuNeXuK6kchIEvridQ?pwd=326a" target="_blank">industrial2</td>
-    <td style="text-align:center">414</td>
-    <td style="text-align:center">00</td>
-    <td style="text-align:center">Velodyne VLP-16</td>
-  </tr>
-  <tr>
-    <td style="text-align:center">QiSheng</td>
-    <td style="text-align:center"><a href="https://pan.baidu.com/s/1uTexo8NcSUi35cqfo7LdNw?pwd=4rvc" target="_blank">park1</td>
-    <td style="text-align:center">479</td>
-    <td style="text-align:center">00</td>
-    <td style="text-align:center">Velodyne VLP-16</td>
-  </tr>
-  <tr>
-    <td style="text-align:center">QiSheng</td>
-    <td style="text-align:center"><a href="https://pan.baidu.com/s/10kaTa2fELM-e7N3PC4sm0g?pwd=xgwm" target="_blank">park2</td>
-    <td style="text-align:center">315</td>
-    <td style="text-align:center">0.0</td>
-    <td style="text-align:center">Velodyne VLP-16</td>
-  </tr>  
+> [!NOTE]
+> The optional PALoc pose-graph node is disabled by default. It additionally requires **GTSAM** and the **Open3D C++ SDK**; neither is required for the core `cm_liuw_slam` estimator.
 
-</table> -->
+### 2. Install ROS and system dependencies
 
+Install [ROS Noetic](https://wiki.ros.org/noetic/Installation/Ubuntu), then run:
 
-<!-- ## 🕹️Quickly Run -->
+```bash
+sudo apt update
+sudo apt install -y \
+  build-essential cmake git python3-catkin-tools python3-dev \
+  libboost-all-dev libceres-dev libeigen3-dev libgeographic-dev \
+  libgflags-dev libgoogle-glog-dev libopencv-dev libpcl-dev \
+  ros-noetic-eigen-conversions ros-noetic-pcl-ros \
+  ros-noetic-tf-conversions
+```
 
-<!-- ### Dependencies
+### 3. Clone and build
 
-- ceres 2.10
-- opencv
-- Eigen3
-- yaml-cpp
-  
-### Usage
+This repository is a ready-to-build Catkin workspace. Clone it with its Livox driver submodule:
 
-1. Prerequisites
-   **Ubuntu and ROS**
+```bash
+git clone --recursive https://github.com/KJ-Falloutlast/CM-LIUW-Odometry.git
+cd CM-LIUW-Odometry
 
-   Ubuntu >= 18.04. And Ubuntu 20.04 is recommended.
+source /opt/ros/noetic/setup.bash
+rosdep install --from-paths src --ignore-src -r -y
 
+catkin config \
+  --extend /opt/ros/noetic \
+  --cmake-args -DCMAKE_BUILD_TYPE=Release -DBUILD_PGO=OFF
+catkin build common_msgs livox_ros_driver cm_liuw_odometry
 
-2. **glog**
-   ```bash
-    sudo apt-get install -y libgoogle-glog-dev
-    ```
+source devel/setup.bash
+```
 
-3. build
-   ```bash
-    cd ~/catkin_ws/src
-    git clone https://github.com/chengwei0427/Adaptive-LIO.git
-    cd ..
-    catkin_make
-    ```
+If the repository was cloned without `--recursive`, initialize the dependency with:
 
+```bash
+git submodule update --init --recursive
+```
 
-4. Run
-   ```bash
-    source devel/setup.bash
-    roslaunch adaptive_lio run.launch
-    ``` -->
-   
+### 4. Configure your sensors
 
-<!-- ## Publications
+Copy the closest file under [`src/cm_liuw_odometry/config`](src/cm_liuw_odometry/config) and update the topics, noise values, timestamps, and calibrated extrinsics before running. The four required input contracts are:
 
-If your like our projects, please cite us and support us with a star 🌟.
-We kindly recommend to cite [our paper](https://ieeexplore.ieee.org/document/10806842) if you find this library useful: -->
+| Modality | ROS message | Configuration key |
+|---|---|---|
+| LiDAR | `sensor_msgs/PointCloud2` or `livox_ros_driver/CustomMsg` | `common/lid_topic` |
+| IMU | `sensor_msgs/Imu` | `common/imu_topic` |
+| Wheel odometry | `nav_msgs/Odometry` | `common/wheel_topic` |
+| UWB | `common_msgs/UWB_FullNeighborDatabase` | `common/uwb_topic` |
 
-<!-- ```latex
-@ARTICLE{10806842,
-  author={Zhao, Chengwei and Hu, Kun and Xu, Jie and Zhao, Lijun and Han, Baiwen and Wu, Kaidi and Tian, Maoshan and Yuan, Shenghai},
-  journal={IEEE Internet of Things Journal}, 
-  title={Adaptive-LIO: Enhancing Robustness and Precision Through Environmental Adaptation in LiDAR Inertial Odometry}, 
-  year={2025},
-  volume={12},
-  number={9},
-  pages={12123-12136},
-  keywords={Accuracy;Laser radar;Odometry;Motion segmentation;Simultaneous localization and mapping;Internet of Things;Robots;Feature extraction;Trajectory;Robustness;Adaptive;LiDAR inertial odometry (LIO);multiresolution map;SLAM},
-  doi={10.1109/JIOT.2024.3519533}}
-``` -->
+Set `common/use_wheel` and `common/use_uwb` to enable the corresponding fusion updates. **Do not reuse the provided extrinsics or anchor coordinates unless they match your own calibrated rig.**
+
+### 5. Run
+
+For a Livox Avia LiDAR–IMU setup:
+
+```bash
+source /opt/ros/noetic/setup.bash
+source devel/setup.bash
+roslaunch cm_liuw_odometry mapping_avia.launch
+```
+
+Play your sensor bag in another terminal:
+
+```bash
+source devel/setup.bash
+rosbag play /absolute/path/to/your_sequence.bag
+```
+
+Primary outputs include:
+
+| Topic | Type | Description |
+|---|---|---|
+| `/Odometry_ori` | `nav_msgs/Odometry` | Fused odometry |
+| `/path_ori` | `nav_msgs/Path` | Estimated trajectory |
+| `/cloud_registered_ori` | `sensor_msgs/PointCloud2` | Registered point cloud in the world frame |
+| `/cloud_registered_body_ori` | `sensor_msgs/PointCloud2` | Registered point cloud in the body frame |
+| `/Laser_map_ori` | `sensor_msgs/PointCloud2` | Incremental map |
+
+### Optional PALoc/PGO build
+
+After installing compatible GTSAM and Open3D C++ development packages, rebuild with:
+
+```bash
+catkin config --cmake-args -DCMAKE_BUILD_TYPE=Release -DBUILD_PGO=ON
+catkin build cm_liuw_odometry
+```
+
+## Dataset
+
+> **Release status: coming soon.** The coal mine rosbag, calibration, total-station reference points, and checksums are being prepared for public distribution. Watch the repository [Releases](https://github.com/KJ-Falloutlast/CM-LIUW-Odometry/releases) to receive the download announcement.
+
+The dataset used for the IROS 2025 real-world experiment was collected with the **CUMT 5** mobile robot in an extreme-degradation underground coal mine tunnel.
+
+| Sequence | Environment | Sensor suite | Ground truth | Status |
+|---|---|---|---|---|
+| `CM-LIUW-CoalMine` | Long, repetitive, feature-poor coal mine tunnel | Robosense 32 LiDAR, Xsens-G710 IMU, p440 UWB, wheel odometry | 15 total-station reference points | **Coming soon** |
+
+The release archive will contain:
+
+- time-synchronized raw LiDAR, IMU, UWB, and wheel-odometry measurements;
+- sensor extrinsics, UWB anchor coordinates, and estimator configuration;
+- total-station reference points and evaluation instructions;
+- a topic manifest, file checksums, license, and a minimal playback command.
+
+When the files become available, this section and the [project page](https://kj-falloutlast.github.io/CM-LIUW-Odometry/#dataset) will be updated with primary and mirror download links. Please do not redistribute preliminary copies without their final calibration and license metadata.
+
+## Repository layout
+
+```text
+CM-LIUW-Odometry/
+├── src/
+│   ├── cm_liuw_odometry/   # estimator, configs, launch files, RViz
+│   ├── common_msgs/        # UWB/navigation message definitions
+│   └── livox_ros_driver/   # pinned Git submodule
+├── doc/                    # paper figures used by the README
+├── docs/                   # GitHub Pages project website
+├── CITATION.cff
+└── LICENSE
+```
+
+## Citation
+
+If this work helps your research, please cite the IROS paper and consider giving the repository a star.
+
+```bibtex
+@inproceedings{hu2025cmliuw,
+  author    = {Kun Hu and Menggang Li and Zhiwen Jin and Chaoquan Tang and Eryi Hu and Gongbo Zhou},
+  title     = {{CM-LIUW-Odometry}: Robust and High-Precision {LiDAR}-Inertial-{UWB}-Wheel Odometry for Extreme Degradation Coal Mine Tunnels},
+  booktitle = {2025 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)},
+  year      = {2025},
+  pages     = {7139--7146},
+  doi       = {10.1109/IROS60139.2025.11245914}
+}
+```
 
 ## Acknowledgments
 
-Thanks for [FAST-LIO2](https://github.com/hku-mars/FAST_LIO), [UWB Localization](https://github.com/lijx10/uwb-localization) and [slam_in_autonomous_driving](https://github.com/gaoxiang12/slam_in_autonomous_driving).
+This project builds upon ideas and open-source components from [FAST-LIO2](https://github.com/hku-mars/FAST_LIO), [UWB Localization](https://github.com/lijx10/uwb-localization), [slam_in_autonomous_driving](https://github.com/gaoxiang12/slam_in_autonomous_driving), [PALoc](https://github.com/JokerJohn/PALoc), and [FAST-LIO-Multi-Sensor-Fusion](https://github.com/zhh2005757/FAST-LIO-Multi-Sensor-Fusion). We thank their authors for their contributions to the robotics community.
 
-<!-- ## Contributors
+## License and support
 
-<a href="https://github.com/chengwei0427/Adaptive-LIO/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=chengwei0427/Adaptive-LIO" />
-</a> -->
+The source code is released under the [GNU General Public License v2.0](LICENSE), consistent with the FAST-LIO2 codebase on which part of this system builds. Existing third-party copyright and license notices remain applicable. Dataset terms will be published with the dataset archive.
+
+For reproducibility questions, please [open an issue](https://github.com/KJ-Falloutlast/CM-LIUW-Odometry/issues) and include your Ubuntu/ROS version, sensor model, launch file, configuration diff, and the first relevant error message.
+
+<div align="center">
+
+Made for robust autonomy where GPS and geometry both disappear.
+
+</div>
