@@ -882,9 +882,8 @@ button {
 
 .dataset-copy h2 { font-size: clamp(2.7rem, 6vw, 5.1rem); }
 .dataset-actions { margin-top: 30px; }
-.button-disabled { color: #82948d; border-color: var(--line); background: rgba(255,255,255,.03); cursor: not-allowed; }
-.button-disabled i { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 10px var(--gold); animation: status-pulse 1.8s ease-in-out infinite; }
-@keyframes status-pulse { 50% { opacity: .35; } }
+.extraction-code { margin: 15px 0 0; color: var(--dim); font-family: ui-monospace, monospace; font-size: .72rem; letter-spacing: .04em; }
+.extraction-code strong { padding: 3px 7px; border: 1px solid rgba(67,229,180,.25); border-radius: 6px; color: var(--mint); background: rgba(67,229,180,.06); letter-spacing: .08em; }
 .text-link { padding: 9px; color: var(--mint); font-size: .84rem; font-weight: 700; }
 .text-link span { display: inline-block; transition: transform 180ms ease; }
 .text-link:hover span { transform: translate(3px,-3px); }
@@ -893,6 +892,8 @@ button {
 .dataset-card::before { content: ""; position: absolute; top: -1px; left: 8%; width: 46%; height: 1px; background: linear-gradient(90deg, transparent, var(--mint), transparent); }
 .dataset-status { display: flex; gap: 8px; align-items: center; color: var(--gold); font-family: ui-monospace, monospace; font-size: .66rem; letter-spacing: .1em; text-transform: uppercase; }
 .dataset-status span { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 9px var(--gold); }
+.dataset-status.is-live { color: var(--mint); }
+.dataset-status.is-live span { background: var(--mint); box-shadow: 0 0 9px var(--mint); }
 .dataset-card h3 { margin: 24px 0 6px; font-size: 1.65rem; letter-spacing: -.04em; }
 .dataset-card > p { margin: 0 0 25px; color: var(--muted); font-size: .88rem; }
 .dataset-card dl { margin: 0; }
@@ -901,6 +902,7 @@ button {
 .dataset-card dd { margin: 0; color: #dce9e4; font-size: .78rem; font-weight: 650; text-align: right; }
 .dataset-package { display: flex; margin-top: 23px; gap: 7px; flex-wrap: wrap; }
 .dataset-package span { padding: 5px 8px; border: 1px solid var(--line); border-radius: 7px; color: var(--dim); background: rgba(255,255,255,.02); font-family: ui-monospace, monospace; font-size: .59rem; }
+.dataset-package span.available { border-color: rgba(67,229,180,.25); color: var(--mint); background: rgba(67,229,180,.05); }
 
 .citation {
   background: var(--bg-soft);

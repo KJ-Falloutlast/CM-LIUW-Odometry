@@ -20,7 +20,7 @@
 [![Project Page](https://img.shields.io/badge/Project-Page-21d4b4?style=for-the-badge&logo=githubpages&logoColor=white)](https://kj-falloutlast.github.io/CM-LIUW-Odometry/)
 [![Paper](https://img.shields.io/badge/Paper-IROS%202025-f3b941?style=for-the-badge&logo=ieee&logoColor=white)](https://doi.org/10.1109/IROS60139.2025.11245914)
 [![arXiv](https://img.shields.io/badge/arXiv-2511.01379-b31b1b?style=for-the-badge&logo=arxiv&logoColor=white)](https://arxiv.org/abs/2511.01379)
-[![Dataset](https://img.shields.io/badge/Dataset-Coming%20Soon-53657d?style=for-the-badge&logo=databricks&logoColor=white)](#dataset)
+[![Dataset](https://img.shields.io/badge/Dataset-Download-43b581?style=for-the-badge&logo=databricks&logoColor=white)](https://pan.baidu.com/s/1F0kvzPzChDI4oLQsRmwrgg?pwd=idnx)
 
 [![Ubuntu](https://img.shields.io/badge/Ubuntu-20.04-E95420?logo=ubuntu&logoColor=white)](https://releases.ubuntu.com/20.04/)
 [![ROS](https://img.shields.io/badge/ROS-Noetic-22314E?logo=ros&logoColor=white)](https://wiki.ros.org/noetic)
@@ -54,7 +54,7 @@ CM-LIUW-Odometry is a tightly coupled **LiDAR–IMU–UWB–wheel** odometry sys
 
 ## News
 
-- **2026-08-23** — Source code, reproducible installation guide, and project page released. Dataset packaging is in progress.
+- **2026-08-23** — Source code, reproducible installation guide, project page, and the underground ROS bag released.
 - **2025-11-04** — Updated manuscript released on [arXiv](https://arxiv.org/abs/2511.01379).
 - **2025-06-16** — CM-LIUW-Odometry accepted to **IROS 2025**. 🎉
 
@@ -177,22 +177,27 @@ catkin build cm_liuw_odometry
 
 ## Dataset
 
-> **Release status: coming soon.** The coal mine rosbag, calibration, total-station reference points, and checksums are being prepared for public distribution. Watch the repository [Releases](https://github.com/KJ-Falloutlast/CM-LIUW-Odometry/releases) to receive the download announcement.
+> **Release status: public ROS bag available.** [Download from Baidu Netdisk](https://pan.baidu.com/s/1F0kvzPzChDI4oLQsRmwrgg?pwd=idnx) with extraction code **`idnx`**.
 
 The dataset used for the IROS 2025 real-world experiment was collected with the **CUMT 5** mobile robot in an extreme-degradation underground coal mine tunnel.
 
 | Sequence | Environment | Sensor suite | Ground truth | Status |
 |---|---|---|---|---|
-| `CM-LIUW-CoalMine` | Long, repetitive, feature-poor coal mine tunnel | Robosense 32 LiDAR, Xsens-G710 IMU, p440 UWB, wheel odometry | 15 total-station reference points | **Coming soon** |
+| `CM-LIUW-CoalMine` | Long, repetitive, feature-poor coal mine tunnel | Robosense 32 LiDAR, Xsens-G710 IMU, p440 UWB, wheel odometry | 15 total-station reference points | **[Download](https://pan.baidu.com/s/1F0kvzPzChDI4oLQsRmwrgg?pwd=idnx)** |
 
-The release archive will contain:
+Current public file:
 
-- time-synchronized raw LiDAR, IMU, UWB, and wheel-odometry measurements;
-- sensor extrinsics, UWB anchor coordinates, and estimator configuration;
-- total-station reference points and evaluation instructions;
-- a topic manifest, file checksums, license, and a minimal playback command.
+- `cm-liuw-odometry-underground-dataset-2025-01-13-16-10-36-zhefan-continuous-go.bag`
+- Baidu Netdisk extraction code: `idnx`
 
-When the files become available, this section and the [project page](https://kj-falloutlast.github.io/CM-LIUW-Odometry/#dataset) will be updated with primary and mirror download links. Please do not redistribute preliminary copies without their final calibration and license metadata.
+After downloading, inspect and play the bag with:
+
+```bash
+rosbag info cm-liuw-odometry-underground-dataset-2025-01-13-16-10-36-zhefan-continuous-go.bag
+rosbag play cm-liuw-odometry-underground-dataset-2025-01-13-16-10-36-zhefan-continuous-go.bag
+```
+
+Calibration files, the topic manifest, total-station evaluation files, checksums, mirrors, and a standalone dataset license are not yet included in this repository. They will be linked here and on the [project page](https://kj-falloutlast.github.io/CM-LIUW-Odometry/#dataset) as they become available. Until the dataset license is published, please contact the authors before redistributing the bag.
 
 ## Repository layout
 
